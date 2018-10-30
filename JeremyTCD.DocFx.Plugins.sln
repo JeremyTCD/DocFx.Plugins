@@ -3,7 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28010.2048
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JeremyTCD.DocFx.Plugins", "src\Plugins\JeremyTCD.DocFx.Plugins.csproj", "{618D3722-6DA9-4263-8BFA-092A006F0623}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JeremyTCD.DocFx.Plugins", "src\Plugins\JeremyTCD.DocFx.Plugins.csproj", "{618D3722-6DA9-4263-8BFA-092A006F0623}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7055F4F1-AAA0-41DA-A280-DAD6757FDDA2}"
+	ProjectSection(SolutionItems) = preProject
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		azure-pipelines.yml = azure-pipelines.yml
+		CHANGELOG.md = CHANGELOG.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
