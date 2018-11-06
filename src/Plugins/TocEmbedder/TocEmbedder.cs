@@ -105,9 +105,12 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
                     svgNode.AppendChild(useNode);
                     buttonNode.AppendChild(svgNode);
                     HtmlNodeCollection iconRequiringNodes = tocDocumentNode.SelectNodes("//li[@class='expandable']/a|//li[@class='expandable']/span");
-                    foreach (HtmlNode htmlNode in iconRequiringNodes)
+                    if (iconRequiringNodes != null)
                     {
-                        htmlNode.PrependChild(buttonNode.Clone());
+                        foreach (HtmlNode htmlNode in iconRequiringNodes)
+                        {
+                            htmlNode.PrependChild(buttonNode.Clone());
+                        }
                     }
 
                     // Clean hrefs and set active category
@@ -169,7 +172,7 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
             return manifest;
         }
 
-        // Clean Hrefs (basically, makes hrefs in absolute if toc is not in the same folder as the current document)
+        // Clean Hrefs (basically, makes hrefs relative to current document if toc is not in the same folder as the current document)
         private void CleanHrefs(HtmlNodeCollection anchorNodes, string tocRelPath)
         {
             string tocRelDir = Path.GetDirectoryName(tocRelPath);
@@ -189,7 +192,9 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
                         continue;
                     }
 
-                    anchorNode.SetAttributeValue("href", tocRelDir + hrefRelToToc);
+                    string result = Path.Combine(tocRelDir, hrefRelToToc).Replace("\\", "/");
+
+                    anchorNode.SetAttributeValue("href", result);
                 }
             }
         }
