@@ -5,16 +5,16 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.DocAsCode.Build.Common" Version="2.39.4" />
-        <PackageReference Include="Microsoft.DocAsCode.Build.ConceptualDocuments" Version="2.39.4" />
-        <PackageReference Include="Microsoft.DocAsCode.MarkdigEngine.Extensions" Version="2.39.4" />
-        <PackageReference Include="Microsoft.DocAsCode.MarkdownLite" Version="2.39.4" />
-        <PackageReference Include="Microsoft.DocAsCode.Plugins" Version="2.39.4" />
-        <PackageReference Include="Microsoft.DocAsCode.Common" Version="2.39.4" />
-        <PackageReference Include="Microsoft.DocAsCode.Dfm" Version="2.39.4" />
-        <PackageReference Include="Microsoft.DocAsCode.MarkdigEngine" Version="2.39.4" />
+        <PackageReference Include="Microsoft.DocAsCode.Build.Common" Version="2.39.5" />
+        <PackageReference Include="Microsoft.DocAsCode.Build.ConceptualDocuments" Version="2.39.5" />
+        <PackageReference Include="Microsoft.DocAsCode.MarkdigEngine.Extensions" Version="2.39.5" />
+        <PackageReference Include="Microsoft.DocAsCode.MarkdownLite" Version="2.39.5" />
+        <PackageReference Include="Microsoft.DocAsCode.Plugins" Version="2.39.5" />
+        <PackageReference Include="Microsoft.DocAsCode.Common" Version="2.39.5" />
+        <PackageReference Include="Microsoft.DocAsCode.Dfm" Version="2.39.5" />
+        <PackageReference Include="Microsoft.DocAsCode.MarkdigEngine" Version="2.39.5" />
         <PackageReference Include="Microsoft.Composition" Version="1.0.31" />
-        <PackageReference Include="Microsoft.DocAsCode.YamlSerialization" Version="2.39.4" />
+        <PackageReference Include="Microsoft.DocAsCode.YamlSerialization" Version="2.39.5" />
         <PackageReference Include="System.Composition.AttributedModel" Version="1.0.31" />
         <PackageReference Include="System.Collections.Immutable" Version="1.5.0" />
         <PackageReference Include="Jering.Markdig.Extensions.FlexiBlocks" Version="0.11.0" />
@@ -27,7 +27,5 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
         </PackageReference>
         <PackageReference Include="HtmlAgilityPack" Version="1.4.9" />
-
-
     </ItemGroup>
 </Project>
