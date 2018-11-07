@@ -219,7 +219,7 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
 
                 if ((matchDir
                     && Path.GetDirectoryName(documentBaseUri.AbsolutePath) != documentDir && // Root dir, stuff like contact, 404 etc, should not cause any category to be active
-                    Path.GetDirectoryName(pageAbsUri.AbsolutePath) == documentDir)
+                    documentDir.StartsWith(Path.GetDirectoryName(pageAbsUri.AbsolutePath)))
                     || (matchDir
                     && pageAbsUri.AbsolutePath == documentPath)
                     || (!matchDir && pageAbsUri.AbsolutePath == documentPath))
