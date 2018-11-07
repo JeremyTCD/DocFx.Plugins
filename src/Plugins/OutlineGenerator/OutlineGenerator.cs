@@ -117,9 +117,7 @@ namespace JeremyTCD.DocFx.Plugins.OutlineGenerator
 
         private OutlineNode GenerateOutlineTree(HtmlNode htmlNode, OutlineNode outlineNode)
         {
-            HtmlNodeCollection children = htmlNode.ChildNodes;
-
-            foreach (HtmlNode childHtmlNode in children)
+            foreach (HtmlNode childHtmlNode in htmlNode.ChildNodes)
             {
                 // Intentionally skips sub trees since they do not contribute to the document's outline. Sub trees are children of 
                 // sectioning content roots, like blockquote. If child is a blockquote, we never iterate through its children, so sub trees are ignored.
