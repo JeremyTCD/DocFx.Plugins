@@ -5,6 +5,14 @@ for an overview of semantic versioning.
 
 ## [Unreleased](https://github.com/JeremyTCD/DocFx.Plugins/compare/0.2.0...HEAD)
 
+## [0.3.0](https://github.com/JeremyTCD/DocFx.Plugins/compare/0.2.0...0.3.0) - Nov 7, 2018 
+### Changes
+- Bumped DocFx dependencies to a version that omits .html suffixes from sitemap loc elements.
+### Additions
+- Added AbsolutePathResolver.
+### Fixes
+- Fixed TocEmbedder sometimes not assigning active class to navbar anchor.
+
 ## [0.2.0](https://github.com/JeremyTCD/DocFx.Plugins/compare/0.1.0...0.2.0) - Nov 6, 2018 
 ### Fixes
 - Fixed TocEmbedder throwing null reference exception if category menu has no expandable nodes.
