@@ -76,12 +76,12 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
 
                 // Category Menu
                 manifestItem.Metadata.TryGetValue("mimo_disableCategoryMenu", out object disableCategoryMenu);
+                HtmlNode metaTocNode = documentNode.SelectSingleNode("//meta[@property='docfx:tocrel']");
+                metaTocNode?.Remove();
                 if (disableCategoryMenu as bool? != true)
                 {
                     // Get TOC path
-                    HtmlNode metaTocNode = documentNode.SelectSingleNode("//meta[@property='docfx:tocrel']");
                     string tocRelPath = metaTocNode.GetAttributeValue("content", null);
-                    metaTocNode.Remove();
                     Uri tocAbsUri;
                     if (tocRelPath.StartsWith("/")) // Root of file scheme is the drive, we want the _site folder to be the root
                     {
