@@ -1,16 +1,17 @@
-﻿using Microsoft.DocAsCode.Plugins;
+﻿using HtmlAgilityPack;
+using JeremyTCD.DocFx.Plugins.Utils;
+using Microsoft.DocAsCode.Common;
+using Microsoft.DocAsCode.MarkdownLite;
+using Microsoft.DocAsCode.Plugins;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Composition;
 using System.Collections.Immutable;
+using System.Composition;
 using System.IO;
-using Microsoft.DocAsCode.Common;
-using HtmlAgilityPack;
+using System.Security.Cryptography;
 using System.Text;
-using JeremyTCD.DocFx.Plugins.Utils;
-using Microsoft.DocAsCode.MarkdownLite;
 using System.Text.RegularExpressions;
-using Newtonsoft.Json;
 
 namespace JeremyTCD.DocFx.Plugins.SearchIndexGenerator
 {
@@ -38,16 +39,54 @@ namespace JeremyTCD.DocFx.Plugins.SearchIndexGenerator
                 return manifest;
             }
 
-            OutputSearchIndex(outputFolder, manifest, SearchIndexItems);
+            // Sort dictionary so json is produced deterministically
+            SortedDictionary<string, SearchIndexItem> sortedSearchIndexItems = new SortedDictionary<string, SearchIndexItem>(SearchIndexItems);
+
+            // Create file name
+            string json = JsonConvert.SerializeObject(sortedSearchIndexItems, Formatting.Indented);
+            MD5 md5 = MD5.Create();
+            byte[] hashBytes = md5.ComputeHash(Encoding.UTF8.GetBytes(json));
+            StringBuilder sb = new StringBuilder();
+            foreach (byte bytes in hashBytes)
+            {
+                sb.Append(bytes.ToString("X2"));
+            }
+            string hash = sb.ToString();
+            string fileName = string.Format(SearchIndexConstants.IndexFileNameFormat, hash);
+            string indexFile = Path.Combine(outputFolder, "resources", fileName);
+
+            // Add link element to conceptual documents
+            string relativePath = PathUtility.MakeRelativePath(outputFolder, indexFile);
+            foreach (ManifestItem manifestItem in manifest.Files)
+            {
+                if (manifestItem.DocumentType != "Conceptual")
+                {
+                    continue;
+                }
+
+                HtmlDocument htmlDoc = manifestItem.GetHtmlOutputDoc(outputFolder);
+                HtmlNode headElement = htmlDoc.DocumentNode.SelectSingleNode("//head");
+                HtmlNode linkElement = htmlDoc.CreateElement("link");
+                linkElement.SetAttributeValue("rel", "preload");
+                linkElement.SetAttributeValue("href", "/" + relativePath);
+                linkElement.SetAttributeValue("as", "fetch");
+                linkElement.SetAttributeValue("type", "application/json");
+                linkElement.SetAttributeValue("crossorigin", "anonymous");
+                headElement.AppendChild(linkElement);
+                string relPath = manifestItem.GetHtmlOutputRelPath();
+                File.WriteAllText(Path.Combine(outputFolder, relPath), htmlDoc.DocumentNode.OuterHtml);
+            }
+
+            // Write to disk
+            OutputSearchIndex(relativePath, indexFile, manifest, json);
 
             return manifest;
         }
 
-        private void OutputSearchIndex(string outputFolder, Manifest manifest, Dictionary<string, SearchIndexItem> searchIndexItems)
+        private void OutputSearchIndex(string relativePath, string indexFile, Manifest manifest, string json)
         {
-            string indexFile = Path.Combine(outputFolder, SearchIndexConstants.IndexFileName);
-
-            JsonUtility.Serialize(indexFile, searchIndexItems, Formatting.Indented);
+            Directory.CreateDirectory(Directory.GetParent(indexFile).FullName);
+            File.WriteAllText(indexFile, json);
 
             var manifestItem = new ManifestItem
             {
@@ -56,7 +95,7 @@ namespace JeremyTCD.DocFx.Plugins.SearchIndexGenerator
             };
             manifestItem.OutputFiles.Add("resource", new OutputFileInfo
             {
-                RelativePath = PathUtility.MakeRelativePath(outputFolder, indexFile),
+                RelativePath = PathUtility.MakeRelativePath(relativePath, indexFile),
             });
 
             manifest.Files?.Add(manifestItem);
@@ -68,7 +107,7 @@ namespace JeremyTCD.DocFx.Plugins.SearchIndexGenerator
 
             foreach (ManifestItem manifestItem in manifest.Files)
             {
-                if(manifestItem.DocumentType != "Conceptual")
+                if (manifestItem.DocumentType != "Conceptual")
                 {
                     continue;
                 }
@@ -115,7 +154,7 @@ namespace JeremyTCD.DocFx.Plugins.SearchIndexGenerator
         private void ExtractTextFromNode(HtmlNode node, StringBuilder stringBuilder)
         {
             // Note: Article's title is included separately in SearchIndexItem.Title
-            if(node.Name == "h1")
+            if (node.Name == "h1")
             {
                 return;
             }

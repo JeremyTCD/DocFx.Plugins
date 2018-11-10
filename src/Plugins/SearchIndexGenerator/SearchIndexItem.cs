@@ -4,16 +4,16 @@
 
     public class SearchIndexItem
     {
-        [JsonProperty("relPath")]
+        [JsonProperty("relPath", Order = 1)]
         public string RelPath { get; set; }
 
-        [JsonProperty("snippetHtml")]
+        [JsonProperty("snippetHtml", Order = 2)]
         public string SnippetHtml { get; set; }
 
-        [JsonProperty("title")]
+        [JsonProperty("title", Order = 3)]
         public string Title { get; set; }
 
-        [JsonProperty("text")]
+        [JsonProperty("text", Order = 4)]
         public string Text { get; set; }
 
         public override bool Equals(object obj)
