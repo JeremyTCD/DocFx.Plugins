@@ -67,7 +67,7 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
 
                 // Clean hrefs and set active category
                 HtmlNodeCollection navAnchorNodes = navDocumentNode.SelectNodes("//a");
-                CleanHrefs(navAnchorNodes, navRelPath);
+                CleanHrefs(navAnchorNodes, documentAbsUri, navAbsUri);
                 SetActive(navAnchorNodes, documentPath, documentAbsUri, documentBaseUri, true);
 
                 // Add navbar to page
@@ -115,7 +115,7 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
 
                     // Clean hrefs and set active category
                     HtmlNodeCollection tocAnchorNodes = tocDocumentNode.SelectNodes("//a");
-                    CleanHrefs(tocAnchorNodes, tocRelPath);
+                    CleanHrefs(tocAnchorNodes, documentAbsUri, tocAbsUri);
                     SetActive(tocAnchorNodes, documentPath, documentAbsUri, documentBaseUri);
 
                     // Add TOC to page
@@ -173,29 +173,14 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
         }
 
         // Clean Hrefs (basically, makes hrefs relative to current document if toc is not in the same folder as the current document)
-        private void CleanHrefs(HtmlNodeCollection anchorNodes, string tocRelPath)
+        private void CleanHrefs(HtmlNodeCollection anchorNodes, Uri documentAbsUri, Uri tocAbsUri)
         {
-            string tocRelDir = Path.GetDirectoryName(tocRelPath);
-            if (tocRelDir == "\\")
+            foreach (HtmlNode anchorNode in anchorNodes)
             {
-                tocRelDir = "/";
-            }
-            if (tocRelDir != string.Empty)
-            {
-                foreach (HtmlNode anchorNode in anchorNodes)
-                {
-                    string hrefRelToToc = anchorNode.GetAttributeValue("href", null);
-
-                    // Don't do anything if its absolute
-                    if (Uri.TryCreate(hrefRelToToc, UriKind.Absolute, out Uri uriRelToToc))
-                    {
-                        continue;
-                    }
-
-                    string result = Path.Combine(tocRelDir, hrefRelToToc).Replace("\\", "/");
-
-                    anchorNode.SetAttributeValue("href", result);
-                }
+                string hrefRelToToc = anchorNode.GetAttributeValue("href", null);
+                Uri hrefAbsUri = new Uri(tocAbsUri, hrefRelToToc);
+                Uri hrefRelDocumentAbsUri = documentAbsUri.MakeRelativeUri(hrefAbsUri);
+                anchorNode.SetAttributeValue("href", hrefRelDocumentAbsUri.ToString());
             }
         }
 
