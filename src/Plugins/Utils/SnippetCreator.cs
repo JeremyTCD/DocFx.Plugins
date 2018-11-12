@@ -17,7 +17,7 @@ namespace JeremyTCD.DocFx.Plugins.Utils
                 throw new InvalidOperationException($"{nameof(SnippetCreator)}: Article {href} has no title (mimo_pageTitle is unspecified). A title is required for an article to " +
                     $"be included in the article list.");
             }
-            HtmlNode titleAnchorNode = HtmlNode.CreateNode($"<a href=\"/{href}\"></a>");
+            HtmlNode titleAnchorNode = HtmlNode.CreateNode($"<a href=\"/{href.Replace(".html", "")}\"></a>");
             titleAnchorNode.InnerHtml = titleNode.InnerText;
             HtmlNode newTitleNode = titleNode.CloneNode(false);
             newTitleNode.InnerHtml = "";
