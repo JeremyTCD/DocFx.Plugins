@@ -43,17 +43,7 @@ namespace JeremyTCD.DocFx.Plugins.SearchIndexGenerator
             SortedDictionary<string, SearchIndexItem> sortedSearchIndexItems = new SortedDictionary<string, SearchIndexItem>(SearchIndexItems);
 
             // Create file name
-            string json = JsonConvert.SerializeObject(sortedSearchIndexItems, Formatting.Indented);
-            MD5 md5 = MD5.Create();
-            byte[] hashBytes = md5.ComputeHash(Encoding.UTF8.GetBytes(json));
-            StringBuilder sb = new StringBuilder();
-            foreach (byte bytes in hashBytes)
-            {
-                sb.Append(bytes.ToString("X2"));
-            }
-            string hash = sb.ToString();
-            string fileName = string.Format(SearchIndexConstants.IndexFileNameFormat, hash);
-            string indexFile = Path.Combine(outputFolder, "resources", fileName);
+            string indexFile = Path.Combine(outputFolder, "resources", "index.json");
 
             // Add link element to conceptual documents
             string relativePath = PathUtility.MakeRelativePath(outputFolder, indexFile);
@@ -78,6 +68,7 @@ namespace JeremyTCD.DocFx.Plugins.SearchIndexGenerator
             }
 
             // Write to disk
+            string json = JsonConvert.SerializeObject(sortedSearchIndexItems, Formatting.Indented);
             OutputSearchIndex(relativePath, indexFile, manifest, json);
 
             return manifest;
