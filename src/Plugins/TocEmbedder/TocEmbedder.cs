@@ -67,7 +67,7 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
 
                 // Clean hrefs and set active category
                 HtmlNodeCollection navAnchorNodes = navDocumentNode.SelectNodes("//a");
-                CleanHrefs(navAnchorNodes, documentAbsUri, navAbsUri);
+                CleanHrefs(navAnchorNodes, documentBaseUri, navAbsUri);
                 SetActive(navAnchorNodes, documentPath, documentAbsUri, documentBaseUri, true);
 
                 // Add navbar to page
@@ -115,7 +115,7 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
 
                     // Clean hrefs and set active category
                     HtmlNodeCollection tocAnchorNodes = tocDocumentNode.SelectNodes("//a");
-                    CleanHrefs(tocAnchorNodes, documentAbsUri, tocAbsUri);
+                    CleanHrefs(tocAnchorNodes, documentBaseUri, tocAbsUri);
                     SetActive(tocAnchorNodes, documentPath, documentAbsUri, documentBaseUri);
 
                     // Add TOC to page
@@ -172,15 +172,15 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
             return manifest;
         }
 
-        // Clean Hrefs (basically, makes hrefs relative to current document if toc is not in the same folder as the current document)
-        private void CleanHrefs(HtmlNodeCollection anchorNodes, Uri documentAbsUri, Uri tocAbsUri)
+        // Clean Hrefs (basically, makes hrefs absolute so AbsolutePathResolver can clean them up)
+        private void CleanHrefs(HtmlNodeCollection anchorNodes, Uri documentBaseUri, Uri tocAbsUri)
         {
             foreach (HtmlNode anchorNode in anchorNodes)
             {
                 string hrefRelToToc = anchorNode.GetAttributeValue("href", null);
                 Uri hrefAbsUri = new Uri(tocAbsUri, hrefRelToToc);
-                Uri hrefRelDocumentAbsUri = documentAbsUri.MakeRelativeUri(hrefAbsUri);
-                anchorNode.SetAttributeValue("href", hrefRelDocumentAbsUri.ToString());
+                Uri hrefRelDocumentBaseUri = documentBaseUri.MakeRelativeUri(hrefAbsUri);
+                anchorNode.SetAttributeValue("href", "/" + hrefRelDocumentBaseUri);
             }
         }
 
