@@ -38,18 +38,28 @@ namespace JeremyTCD.DocFx.Plugins.AbsolutePathResolver
 
                 // Find current manifest items relative path to the site's root
                 string relPath = manifestItem.GetHtmlOutputRelPath();
-                int numLevels = relPath.Count(x => x == '/');
                 string prefix = null;
-                if (numLevels == 0)
+
+                // 404.html may be served at any url, so it must contain only absolute urls
+                if (relPath == "404.html")
                 {
-                    prefix = ".";
+                    prefix = manifestItem.Metadata["mimo_baseUrl"] as string;
+                    prefix = prefix.Substring(0, prefix.Length - 1); // Remove trailing slash
                 }
                 else
                 {
-                    prefix = "..";
-                    for (int i = 1; i < numLevels; i++)
+                    int numLevels = relPath.Count(x => x == '/');
+                    if (numLevels == 0)
                     {
-                        prefix += "/..";
+                        prefix = ".";
+                    }
+                    else
+                    {
+                        prefix = "..";
+                        for (int i = 1; i < numLevels; i++)
+                        {
+                            prefix += "/..";
+                        }
                     }
                 }
 
