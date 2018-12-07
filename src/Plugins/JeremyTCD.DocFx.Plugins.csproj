@@ -17,7 +17,7 @@
         <PackageReference Include="Microsoft.DocAsCode.YamlSerialization" Version="2.39.5" />
         <PackageReference Include="System.Composition.AttributedModel" Version="1.0.31" />
         <PackageReference Include="System.Collections.Immutable" Version="1.5.0" />
-        <PackageReference Include="Jering.Markdig.Extensions.FlexiBlocks" Version="0.11.0" />
+        <PackageReference Include="Jering.Markdig.Extensions.FlexiBlocks" Version="0.13.0" />
         <PackageReference Include="Roslynator.Analyzers" Version="1.9.0">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>

@@ -120,7 +120,7 @@
 
         public void Dispose()
         {
-            (FlexiBlocksMarkdownPipelineBuilderExtensions.GetServiceProvider() as IDisposable)?.Dispose();
+            FlexiBlocksMarkdownPipelineBuilderExtensions.DisposeServiceProvider();
         }
     }
 }
