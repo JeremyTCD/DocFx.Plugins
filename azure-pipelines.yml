@@ -11,8 +11,8 @@ resources:
 jobs:
 - template: templates/nuget/main.yml@templates
   parameters:
-    nugetRestoreEndPoint: "https://pkgs.dev.azure.com/JeremyTCD/_packaging/Main/nuget/v2"
-    nugetRestorePat: "$(nugetRestorePat)"
-    nugetPushEndpoint: "https://pkgs.dev.azure.com/JeremyTCD/_packaging/Main/nuget/v2"
+    nugetRestoreEndPoints: "https://pkgs.dev.azure.com/JeremyTCD/_packaging/Main/nuget/v2 https://api.nuget.org/v3/index.json"
+    nugetRestorePats: "$(nugetRestorePat)"
+    nugetReleasePushEndpoint: "https://pkgs.dev.azure.com/JeremyTCD/_packaging/Main/nuget/v2"
     runInheritDoc: false
     runTests: false
