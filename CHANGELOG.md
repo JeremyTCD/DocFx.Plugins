@@ -3,12 +3,15 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 [The Semantic Versioning Lifecycle](https://www.jeremytcd.com/articles/the-semantic-versioning-lifecycle)
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeremyTCD/DocFx.Plugins/compare/0.5.0...HEAD)
+## [Unreleased](https://github.com/JeremyTCD/DocFx.Plugins/compare/0.6.0...HEAD)
+
+## [0.6.0](https://github.com/JeremyTCD/DocFx.Plugins/compare/0.5.0...0.6.0) - Dec 7, 2018 
+### Changes
+- Bumped `Jering.Markdig.Extensions.FlexiBlocks` to 0.13.0.
 
 ## [0.5.0](https://github.com/JeremyTCD/DocFx.Plugins/compare/0.4.0...0.5.0) - Nov 17, 2018 
 ### Changes
 - TocEmbedder now leaves making URLs relative to AbsolutePathResolver.
-
 ### Additions
 - AbsolutePathResolver now makes relative URLs in 404.html absolute.
 
