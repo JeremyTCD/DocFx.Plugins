@@ -6,11 +6,11 @@
     using Jering.Markdig.Extensions.FlexiBlocks.FlexiIncludeBlocks;
     using Jering.Markdig.Extensions.FlexiBlocks.FlexiSectionBlocks;
     using Markdig;
-    using Markdig.Extensions.AutoIdentifiers;
     using Microsoft.DocAsCode.Common;
     using Microsoft.DocAsCode.MarkdigEngine.Extensions;
     using Microsoft.DocAsCode.Plugins;
     using System;
+    using System.IO;
 
     public class MimoMarkdownService : IMarkdownService, IDisposable
     {
@@ -88,7 +88,7 @@
 
             var flexiIncludeBlocksExtensionOptions = new FlexiIncludeBlocksExtensionOptions
             {
-                RootBaseUri = path
+                RootBaseUri = Path.Combine(_parameters.BasePath, path)
             };
 
             var builder = new MarkdownPipelineBuilder().
@@ -111,7 +111,8 @@
                 UseFlexiBlocks(
                     alertBlocksExtensionOptions: flexiAlertBlocksExtensionOptions,
                     codeBlocksExtensionOptions: flexiCodeBlocksExtensionOptions,
-                    sectionBlocksExtensionOptions: flexiSectionBlocksExtensionOptions);
+                    sectionBlocksExtensionOptions: flexiSectionBlocksExtensionOptions,
+                    includeBlocksExtensionOptions: flexiIncludeBlocksExtensionOptions);
 
             builder.Extensions.Add(new CustomYamlHeaderExtension(new MarkdownContext()));
 
