@@ -178,6 +178,14 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
             foreach (HtmlNode anchorNode in anchorNodes)
             {
                 string hrefRelToToc = anchorNode.GetAttributeValue("href", null);
+
+                // If href is already an absolute URL, continue
+                if(Uri.TryCreate(hrefRelToToc, UriKind.Absolute, out Uri testHrefRelToToc)
+                    && (testHrefRelToToc.Scheme == "http" || testHrefRelToToc.Scheme == "https"))
+                {
+                    continue;
+                }
+
                 Uri hrefAbsUri = new Uri(tocAbsUri, hrefRelToToc);
                 Uri hrefRelDocumentBaseUri = documentBaseUri.MakeRelativeUri(hrefAbsUri);
                 anchorNode.SetAttributeValue("href", "/" + hrefRelDocumentBaseUri);
