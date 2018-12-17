@@ -33,13 +33,10 @@ namespace JeremyTCD.DocFx.Plugins.Utils
             }
 
             // Content
-            HtmlNode contentNode = article.SelectSingleNode(".//div[contains(@class, 'content')]");
-            HtmlNode descriptionNode = contentNode.SelectSingleNode(".//p");
+            HtmlNode descriptionNode = article.SelectSingleNode(".//p");
             if(descriptionNode != null)
             {
-                HtmlNode newContentNode = contentNode.CloneNode(false);
-                newContentNode.AppendChild(descriptionNode.CloneNode(true));
-                snippet.AppendChild(newContentNode.CloneNode(true));
+                snippet.AppendChild(descriptionNode.CloneNode(true));
             }
 
             // TODO allow user to specify that snippet should be the first x characters instead of the first paragraph of the article.

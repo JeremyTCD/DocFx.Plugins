@@ -53,7 +53,7 @@ namespace JeremyTCD.DocFx.Plugins.OutlineGenerator
                     Level = 1,
                     Href = "#"
                 };
-                GenerateOutlineTree(articleNode.SelectSingleNode("div[@class='content']"), rootOutlineNode); // content div is the direct parent level 2 sections
+                GenerateOutlineTree(articleNode, rootOutlineNode); // content div is the direct parent level 2 sections
 
                 // Render outline tree
                 var outlineHtmlDoc = new HtmlDocument();
@@ -123,8 +123,8 @@ namespace JeremyTCD.DocFx.Plugins.OutlineGenerator
                 // sectioning content roots, like blockquote. If child is a blockquote, we never iterate through its children, so sub trees are ignored.
                 if (childHtmlNode.Name == "section")
                 {
-                    // We don't know the heading tag, could be h1|h2|h3|h4|h5|h6. Xpath 1 sucks so bad.
-                    HtmlNode headingElement = childHtmlNode.SelectSingleNode("header/*[self::h1 or self::h2 or self::h3 or self::h4 or self::h5 or self::h6]");
+                    // We don't know the heading tag level, could be h2|h3|h4|h5|h6.
+                    HtmlNode headingElement = childHtmlNode.SelectSingleNode("header/*[self::h2 or self::h3 or self::h4 or self::h5 or self::h6]");
                     int level = headingElement.Name[1] - 48; // http://www.asciitable.com/
                     OutlineNode childOutlineNode = new OutlineNode
                     {
