@@ -208,11 +208,15 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
                     pageAbsUri = new Uri(documentAbsUri, href);
                 }
 
+                string baseDir = Path.GetDirectoryName(documentBaseUri.AbsolutePath);
+                string pageDir = Path.GetDirectoryName(pageAbsUri.AbsolutePath);
+
                 string documentDir = Path.GetDirectoryName(documentPath);
 
                 if ((matchDir
-                    && Path.GetDirectoryName(documentBaseUri.AbsolutePath) != documentDir && // Root dir, stuff like contact, 404 etc, should not cause any category to be active
-                    documentDir.StartsWith(Path.GetDirectoryName(pageAbsUri.AbsolutePath)))
+                    && baseDir != documentDir // Root dir, stuff like contact, 404 etc, should not cause any category to be active
+                    && baseDir != pageDir // If page exists in base directory, it is only active if pageAbsUri.AbsolutePath == documentPath)
+                    && documentDir.StartsWith(pageDir))
                     || (matchDir
                     && pageAbsUri.AbsolutePath == documentPath)
                     || (!matchDir && pageAbsUri.AbsolutePath == documentPath))
