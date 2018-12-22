@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
-using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace JeremyTCD.DocFx.Plugins.TocEmbedder
@@ -81,7 +81,15 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
                 if (disableCategoryMenu as bool? != true)
                 {
                     // Get TOC path
-                    string tocRelPath = metaTocNode.GetAttributeValue("content", null);
+                    manifestItem.Metadata.TryGetValue("mimo_toc", out object toc);
+                    if (!(toc is string tocRelPath))
+                    {
+                        tocRelPath = metaTocNode.GetAttributeValue("content", null);
+                    }
+                    else
+                    {
+                        tocRelPath = tocRelPath.Replace(".yml", ".html");
+                    }
                     Uri tocAbsUri;
                     if (tocRelPath.StartsWith("/")) // Root of file scheme is the drive, we want the _site folder to be the root
                     {
@@ -141,7 +149,11 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
                     HtmlNode activeNavbarAnchor = navbarNode.SelectSingleNode("//*[@class='active']");
                     if (activeNavbarAnchor != null)
                     {
-                        breadcrumbs.Add(("a", activeNavbarAnchor.InnerText.Trim(), activeNavbarAnchor.GetAttributeValue("href", null)));
+                        string href = activeNavbarAnchor.GetAttributeValue("href", null);
+                        if (breadcrumbs.Last().Item3 != href) { // E.g navbar anchor is ./articles and toc topmost active anchor is also ./articles, redundant to list it twice
+
+                            breadcrumbs.Add(("a", activeNavbarAnchor.InnerText.Trim(), href));
+                        }
                     }
 
                     // Create UL
@@ -180,7 +192,7 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
                 string hrefRelToToc = anchorNode.GetAttributeValue("href", null);
 
                 // If href is already an absolute URL, continue
-                if(Uri.TryCreate(hrefRelToToc, UriKind.Absolute, out Uri testHrefRelToToc)
+                if (Uri.TryCreate(hrefRelToToc, UriKind.Absolute, out Uri testHrefRelToToc)
                     && (testHrefRelToToc.Scheme == "http" || testHrefRelToToc.Scheme == "https"))
                 {
                     continue;
@@ -208,18 +220,19 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
                     pageAbsUri = new Uri(documentAbsUri, href);
                 }
 
-                string baseDir = Path.GetDirectoryName(documentBaseUri.AbsolutePath);
-                string pageDir = Path.GetDirectoryName(pageAbsUri.AbsolutePath);
+                if (pageAbsUri.AbsolutePath == documentPath) // Direct match, anchor refers to the document
+                {
+                    anchorNode.SetAttributeValue("class", "active");
+                    break;
+                }
 
-                string documentDir = Path.GetDirectoryName(documentPath);
+                if (!matchDir) // We only want direct matches, continue
+                {
+                    continue;
+                }
 
-                if ((matchDir
-                    && baseDir != documentDir // Root dir, stuff like contact, 404 etc, should not cause any category to be active
-                    && baseDir != pageDir // If page exists in base directory, it is only active if pageAbsUri.AbsolutePath == documentPath)
-                    && documentDir.StartsWith(pageDir))
-                    || (matchDir
-                    && pageAbsUri.AbsolutePath == documentPath)
-                    || (!matchDir && pageAbsUri.AbsolutePath == documentPath))
+                // TODO consider closes match?
+                if (documentPath.StartsWith(pageAbsUri.AbsolutePath)) // E.g pageAbsUri is <site>/articles, document is <site>/articles/my-article. 
                 {
                     anchorNode.SetAttributeValue("class", "active");
                     break;
