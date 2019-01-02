@@ -3,7 +3,16 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 [The Semantic Versioning Lifecycle](https://www.jeremytcd.com/articles/the-semantic-versioning-lifecycle)
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeremyTCD/DocFx.Plugins/compare/0.6.0...HEAD)
+## [Unreleased](https://github.com/JeremyTCD/DocFx.Plugins/compare/0.7.0...HEAD)
+
+## [0.7.0](https://github.com/JeremyTCD/DocFx.Plugins/compare/0.6.0...0.7.0) - Jan 2, 2019
+### Changes
+- Bumped `Jering.Markdig.Extensions.FlexiBlocks` to 0.14.0.
+### Additions
+- Added ExplicitParagraphsExtension to MimoMarkdown.
+- Added mimo_toc option to TocEmbedder to allow for overriding of a page's TOC.
+### Fixes
+- Fixed FlexiIncludeBlocksExtensionOptions.RootBaseUri being set to the wrong value.
 
 ## [0.6.0](https://github.com/JeremyTCD/DocFx.Plugins/compare/0.5.0...0.6.0) - Dec 7, 2018 
 ### Changes
