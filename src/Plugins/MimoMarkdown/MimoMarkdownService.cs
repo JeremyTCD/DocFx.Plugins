@@ -5,6 +5,7 @@
     using Jering.Markdig.Extensions.FlexiBlocks.FlexiCodeBlocks;
     using Jering.Markdig.Extensions.FlexiBlocks.FlexiIncludeBlocks;
     using Jering.Markdig.Extensions.FlexiBlocks.FlexiSectionBlocks;
+    using Jering.Markdig.Extensions.FlexiBlocks.FlexiTableBlocks;
     using Markdig;
     using Microsoft.DocAsCode.Common;
     using Microsoft.DocAsCode.MarkdigEngine.Extensions;
@@ -55,7 +56,7 @@
             {
                 html = Markdown.ToHtml(src, markdownPipeline);
             }
-            catch(Exception exception)
+            catch (Exception exception)
             {
                 Logger.LogError(exception.ToString(), file: path);
                 throw;
@@ -91,6 +92,11 @@
                 RootBaseUri = Path.Combine(_parameters.BasePath, path)
             };
 
+            var flexiTableBlocksExtensionOptions = new FlexiTableBlocksExtensionOptions
+            {
+                DefaultBlockOptions = new FlexiTableBlockOptions(wrapperElement: "div")
+            };
+
             var builder = new MarkdownPipelineBuilder().
                 UseEmphasisExtras().
                 UseDefinitionLists().
@@ -112,9 +118,11 @@
                     alertBlocksExtensionOptions: flexiAlertBlocksExtensionOptions,
                     codeBlocksExtensionOptions: flexiCodeBlocksExtensionOptions,
                     sectionBlocksExtensionOptions: flexiSectionBlocksExtensionOptions,
-                    includeBlocksExtensionOptions: flexiIncludeBlocksExtensionOptions);
+                    includeBlocksExtensionOptions: flexiIncludeBlocksExtensionOptions,
+                    tableBlocksExtensionOptions: flexiTableBlocksExtensionOptions);
 
             builder.Extensions.Add(new CustomYamlHeaderExtension(new MarkdownContext()));
+            builder.Extensions.Add(new ExplicitParagraphsExtension());
 
             return builder.Build();
         }
