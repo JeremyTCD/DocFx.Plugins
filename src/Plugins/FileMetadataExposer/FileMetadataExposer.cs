@@ -41,8 +41,6 @@ namespace JeremyTCD.DocFx.Plugins.FileMetadataExposer
                     }
                 }
             }
-
-            return;
         }
 
         public IEnumerable<FileModel> Prebuild(ImmutableList<FileModel> models, IHostService host)
