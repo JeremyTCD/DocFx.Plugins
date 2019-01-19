@@ -3,7 +3,13 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 [The Semantic Versioning Lifecycle](https://www.jering.tech/articles/the-semantic-versioning-lifecycle)
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeremyTCD/DocFx.Plugins/compare/0.8.0...HEAD)
+## [Unreleased](https://github.com/JeremyTCD/DocFx.Plugins/compare/0.9.0...HEAD)
+
+## [0.9.0](https://github.com/JeremyTCD/DocFx.Plugins/compare/0.8.0...0.9.0) - Jan 19, 2019
+### Changes
+- Bumped dependencies.
+### Fixes
+- `SnippetCreator` now corrects hash hrefs for use in snippets.
 
 ## [0.8.0](https://github.com/JeremyTCD/DocFx.Plugins/compare/0.7.0...0.8.0) - Jan 7, 2019
 ### Additions
