@@ -1,9 +1,13 @@
 # Changelog
-This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). Refer to 
-[The Semantic Versioning Lifecycle](https://www.jering.tech/articles/the-semantic-versioning-lifecycle)
+This project uses [semantic versioning](http://semver.org/spec/v2.0.0.html). Refer to 
+*[Semantic Versioning in Practice](https://www.jering.tech/articles/semantic-versioning-in-practice)*
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeremyTCD/DocFx.Plugins/compare/0.9.0...HEAD)
+## [Unreleased](https://github.com/JeremyTCD/DocFx.Plugins/compare/0.10.0...HEAD)
+
+## [0.10.0](https://github.com/JeremyTCD/DocFx.Plugins/compare/0.9.0...0.10.0) - Jan 21, 2019
+### Changes
+- `mimo_baseUrl` no longer has a trailing slash, updated `AbsolutePathResolver`.
 
 ## [0.9.0](https://github.com/JeremyTCD/DocFx.Plugins/compare/0.8.0...0.9.0) - Jan 19, 2019
 ### Changes
