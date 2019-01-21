@@ -44,7 +44,6 @@ namespace JeremyTCD.DocFx.Plugins.AbsolutePathResolver
                 if (relPath == "404.html")
                 {
                     prefix = manifestItem.Metadata["mimo_baseUrl"] as string;
-                    prefix = prefix.Substring(0, prefix.Length - 1); // Remove trailing slash
                 }
                 else
                 {
