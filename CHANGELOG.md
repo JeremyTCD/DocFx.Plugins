@@ -3,7 +3,11 @@ This project uses [semantic versioning](http://semver.org/spec/v2.0.0.html). Ref
 *[Semantic Versioning in Practice](https://www.jering.tech/articles/semantic-versioning-in-practice)*
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeremyTCD/DocFx.Plugins/compare/0.10.0...HEAD)
+## [Unreleased](https://github.com/JeremyTCD/DocFx.Plugins/compare/0.11.0...HEAD)
+
+## [0.11.0](https://github.com/JeremyTCD/DocFx.Plugins/compare/0.10.0...0.11.0) - Jan 22, 2019
+### Fixes
+- `ExternalAnchorFixer` now properly handles absolute URLs that point to internal pages.
 
 ## [0.10.0](https://github.com/JeremyTCD/DocFx.Plugins/compare/0.9.0...0.10.0) - Jan 21, 2019
 ### Changes
