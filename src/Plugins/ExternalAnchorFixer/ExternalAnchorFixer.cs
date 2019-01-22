@@ -5,6 +5,7 @@ using System;
 using System.Collections.Immutable;
 using System.Composition;
 using System.IO;
+using System.Linq;
 
 namespace JeremyTCD.DocFx.Plugins.ExternalAnchorFixer
 {
@@ -36,10 +37,26 @@ namespace JeremyTCD.DocFx.Plugins.ExternalAnchorFixer
                 // Get HtmlDocument
                 HtmlDocument htmlDoc = manifestItem.GetHtmlOutputDoc(outputFolder);
 
-                // Update all anchors that have hrefs starting with http. Since all internal links in mimo have to be relative (so that the site can
-                // be published to paths, e.g jering.tech/utilities/<project name>), full urls are only used for external sites.
+                // Get base url
+                string baseUrl = manifestItem.Metadata["mimo_baseUrl"] as string;
+
+                // Update all anchors that have absolute hrefs pointing at external sites to open in separate tabs.
+                // Make an exception for anchors with absolute hrefs pointing to internal URLs but with the new-tab class.
                 foreach (HtmlNode htmlNode in htmlDoc.DocumentNode.SelectNodes("//a[starts-with(@href, 'http')]"))
                 {
+                    string[] classes = htmlNode.GetAttributeValue("class", null)?.Split(' ');
+                    bool forceNewTab = classes?.Any(c => c == "new-tab") ?? false;
+
+                    if (forceNewTab)
+                    {
+                        string newClasses = string.Join(" ", classes.Where(s => s != "new-tab"));
+                        htmlNode.SetAttributeValue("class", newClasses);
+                    }
+                    else if (htmlNode.GetAttributeValue("href", null).StartsWith(baseUrl))
+                    {
+                        continue;
+                    }
+
                     htmlNode.SetAttributeValue("target", "_blank");
                     // Prevents malicious sites from manipulating the window object https://mathiasbynens.github.io/rel-noopener/#hax
                     htmlNode.SetAttributeValue("rel", "noopener");
