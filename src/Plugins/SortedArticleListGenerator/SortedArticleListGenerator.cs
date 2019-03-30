@@ -69,14 +69,14 @@ namespace JeremyTCD.DocFx.Plugins.SortedArticleList
                 string relPath = manifestItem.GetHtmlOutputRelPath();
 
                 HtmlDocument htmlDoc = manifestItem.GetHtmlOutputDoc(outputFolder);
-                HtmlNode salWrapperNode = htmlDoc.
+                HtmlNode salParentNode = htmlDoc.
                     DocumentNode.
-                    SelectSingleNode($"//div[@id='{SortedArticleListConstants.SalAllItemsNodeId}']");
-                if (salWrapperNode == null)
+                    SelectSingleNode($"//div[@class='{SortedArticleListConstants.SalWrapperNodeClass}']//div[@class='{SortedArticleListConstants.SalItemsNodeClass}']");
+                if (salParentNode == null)
                 {
                     throw new InvalidDataException($"{nameof(SortedArticleListGenerator)}: Html output {relPath} has no sorted article list all-items node");
                 }
-                salWrapperNode.AppendChildren(salItemsNode.ChildNodes);
+                salParentNode.AppendChildren(salItemsNode.ChildNodes);
 
                 htmlDoc.Save(Path.Combine(outputFolder, relPath));
             }
