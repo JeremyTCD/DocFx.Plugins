@@ -47,119 +47,193 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
 
                 // Navbar
                 // Get navbar path
-                HtmlNode metaNavNode = documentNode.SelectSingleNode("//meta[@property='docfx:navrel']");
-                string navRelPath = metaNavNode.GetAttributeValue("content", null);
-                metaNavNode.Remove();
-                Uri navAbsUri;
-                if (navRelPath.StartsWith("/")) // Root of file scheme is the drive, we want the _site folder to be the root
+                HtmlNode metaNavbarNode = documentNode.SelectSingleNode("//meta[@property='docfx:navrel']");
+                string navbarRelPath = metaNavbarNode.GetAttributeValue("content", null);
+                metaNavbarNode.Remove();
+                // Root of file scheme is the drive, we want the _site folder to be the root
+                Uri navbarAbsUri = navbarRelPath.StartsWith("/") ? new Uri(documentBaseUri, navbarRelPath.Substring(1)) : new Uri(documentAbsUri, navbarRelPath);
+
+                // Get navbar
+                HtmlDocument navbarHtmlDoc = new HtmlDocument();
+                navbarHtmlDoc.Load(navbarAbsUri.AbsolutePath, Encoding.UTF8);
+                HtmlNode navbarDocumentNode = navbarHtmlDoc.DocumentNode;
+
+                // Clean hrefs and set active category
+                HtmlNodeCollection navbarAnchorNodes = navbarDocumentNode.SelectNodes("//a");
+                CleanHrefs(navbarAnchorNodes, documentBaseUri, navbarAbsUri);
+                HtmlNode activeNavbarNode = GetActiveNode(navbarAnchorNodes, documentPath, documentAbsUri, documentBaseUri, true);
+                activeNavbarNode?.SetAttributeValue("class", "active");
+
+                // Add navbar to page
+                HtmlNode navbarNode = documentNode.SelectSingleNode("//*[@class='page-header__content dropdown__body']");
+                HtmlNode navbarWrapper = navbarHtmlDoc.CreateElement("nav");
+                navbarWrapper.SetAttributeValue("class", "page-header__navbar");
+                navbarWrapper.AppendChild(navbarDocumentNode);
+                navbarNode.PrependChild(navbarWrapper);
+
+                // Category Menu
+                HtmlNode metaCatMenuNode = documentNode.SelectSingleNode("//meta[@property='docfx:tocrel']");
+                metaCatMenuNode?.Remove();
+
+                // Get cat menu path
+                manifestItem.Metadata.TryGetValue("mimo_toc", out object catMenuRelPathRaw);
+                if (!(catMenuRelPathRaw is string catMenuRelPath))
                 {
-                    navAbsUri = new Uri(documentBaseUri, navRelPath.Substring(1));
+                    catMenuRelPath = metaCatMenuNode.GetAttributeValue("content", null);
                 }
                 else
                 {
-                    navAbsUri = new Uri(documentAbsUri, navRelPath);
+                    catMenuRelPath = catMenuRelPath.Replace(".yml", ".html");
                 }
+                // Root of file scheme is the drive, we want the _site folder to be the root
+                Uri catMenuAbsUri = catMenuRelPath.StartsWith("/") ? new Uri(documentBaseUri, catMenuRelPath.Substring(1)) : new Uri(documentAbsUri, catMenuRelPath);
 
-                // Get navbar
-                HtmlDocument navHtmlDoc = new HtmlDocument();
-                navHtmlDoc.Load(navAbsUri.AbsolutePath, Encoding.UTF8);
-                HtmlNode navDocumentNode = navHtmlDoc.DocumentNode;
+                // Breadcrumbs
+                manifestItem.Metadata.TryGetValue("mimo_disableBreadcrumbs", out object disableBreadcrumbsRaw);
+                manifestItem.Metadata.TryGetValue("mimo_disableCategoryMenu", out object disableCategoryMenuRaw);
+                bool disableCategoryMenu = disableCategoryMenuRaw as bool? == true; // false if unspecified
+                bool disableBreadcrumbs = disableBreadcrumbsRaw as bool? == true; // false if unspecified
+                bool createBreadcrumbs = !disableCategoryMenu || !disableBreadcrumbs;
+                List<(string, string, string)> breadcrumbs = createBreadcrumbs ? new List<(string, string, string)>() : null;
 
-                // Clean hrefs and set active category
-                HtmlNodeCollection navAnchorNodes = navDocumentNode.SelectNodes("//a");
-                CleanHrefs(navAnchorNodes, documentBaseUri, navAbsUri);
-                SetActive(navAnchorNodes, documentPath, documentAbsUri, documentBaseUri, true);
-
-                // Add navbar to page
-                HtmlNode navbarNode = documentNode.SelectSingleNode("//*[@id='page-header-navbar']");
-                navbarNode.AppendChild(navDocumentNode);
-
-                // Category Menu
-                manifestItem.Metadata.TryGetValue("mimo_disableCategoryMenu", out object disableCategoryMenu);
-                HtmlNode metaTocNode = documentNode.SelectSingleNode("//meta[@property='docfx:tocrel']");
-                metaTocNode?.Remove();
-                if (disableCategoryMenu as bool? != true)
+                if (catMenuAbsUri.AbsoluteUri != navbarAbsUri.AbsoluteUri) // If they're equal, current document does not display a category menu (navbar is never the category menu of a document)
                 {
-                    // Get TOC path
-                    manifestItem.Metadata.TryGetValue("mimo_toc", out object toc);
-                    if (!(toc is string tocRelPath))
-                    {
-                        tocRelPath = metaTocNode.GetAttributeValue("content", null);
-                    }
-                    else
-                    {
-                        tocRelPath = tocRelPath.Replace(".yml", ".html");
-                    }
-                    Uri tocAbsUri;
-                    if (tocRelPath.StartsWith("/")) // Root of file scheme is the drive, we want the _site folder to be the root
-                    {
-                        tocAbsUri = new Uri(documentBaseUri, tocRelPath.Substring(1));
-                    }
-                    else
-                    {
-                        tocAbsUri = new Uri(documentAbsUri, tocRelPath);
-                    }
+                    // Get cat menu
+                    HtmlDocument catMenuHtmlDoc = new HtmlDocument();
+                    catMenuHtmlDoc.Load(catMenuAbsUri.AbsolutePath, Encoding.UTF8);
+                    HtmlNode catMenuDocumentNode = catMenuHtmlDoc.DocumentNode;
 
-                    // Get TOC
-                    HtmlDocument tocHtmlDoc = new HtmlDocument();
-                    tocHtmlDoc.Load(tocAbsUri.AbsolutePath, Encoding.UTF8);
-                    HtmlNode tocDocumentNode = tocHtmlDoc.DocumentNode;
+                    // Convert cat menu into a collapsible menu
+                    // Create master buttonNode
+                    HtmlNode masterButtonNode = catMenuHtmlDoc.CreateElement("button");
+                    HtmlNode masterSvgNode = catMenuHtmlDoc.CreateElement("svg");
+                    HtmlNode masterUseNode = catMenuHtmlDoc.CreateElement("use");
+                    masterUseNode.SetAttributeValue("xlink:href", "#material-design-chevron-right");
+                    masterSvgNode.AppendChild(masterUseNode);
+                    masterButtonNode.AppendChild(masterSvgNode);
+                    HtmlNode divNodeMaster = catMenuHtmlDoc.CreateElement("div");
+                    divNodeMaster.SetAttributeValue("class", "collapsible-menu__hover-area");
+                    HtmlNode divNodeWithButtonMaster = divNodeMaster.Clone();
+                    divNodeWithButtonMaster.AppendChild(masterButtonNode);
 
-                    // Insert SVGs
-                    HtmlNode buttonNode = tocHtmlDoc.CreateElement("button");
-                    HtmlNode svgNode = tocHtmlDoc.CreateElement("svg");
-                    HtmlNode useNode = tocHtmlDoc.CreateElement("use");
-                    useNode.SetAttributeValue("xlink:href", "#material-design-chevron-right");
-                    svgNode.AppendChild(useNode);
-                    buttonNode.AppendChild(svgNode);
-                    HtmlNodeCollection iconRequiringNodes = tocDocumentNode.SelectNodes("//li[@class='expandable']/a|//li[@class='expandable']/span");
-                    if (iconRequiringNodes != null)
+                    // Set classes and add button
+                    foreach (HtmlNode catMenuLINode in catMenuDocumentNode.SelectNodes("//li"))
                     {
-                        foreach (HtmlNode htmlNode in iconRequiringNodes)
+                        HtmlNode ulNode = catMenuLINode.SelectSingleNode("./ul");
+                        if (ulNode != null)
                         {
-                            htmlNode.PrependChild(buttonNode.Clone());
+                            ulNode.SetAttributeValue("class", "collapsible-menu__inner-list");
+                            catMenuLINode.SetAttributeValue("class", "collapsible-menu__node collapsible-menu__node--expandable");
+                            HtmlNode divNode = divNodeWithButtonMaster.Clone();
+                            HtmlNode anchorNode = catMenuLINode.SelectSingleNode("./a");
+
+                            if (anchorNode != null)
+                            {
+                                divNode.SetAttributeValue("class", "collapsible-menu__hover-area collapsible-menu__hover-area--contains-link");
+                                anchorNode.Remove();
+                                divNode.AppendChild(anchorNode);
+                            }
+                            else
+                            {
+                                HtmlNode spanNode = catMenuLINode.SelectSingleNode("./span");
+                                spanNode.Remove();
+                                divNode.AppendChild(spanNode);
+                            }
+                            catMenuLINode.PrependChild(divNode);
+                        }
+                        else
+                        {
+                            catMenuLINode.SetAttributeValue("class", "collapsible-menu__node");
+                            HtmlNode anchorNode = catMenuLINode.SelectSingleNode("./a");
+                            anchorNode.Remove();
+                            HtmlNode divNode = divNodeMaster.Clone();
+                            divNode.SetAttributeValue("class", "collapsible-menu__hover-area collapsible-menu__hover-area--contains-link");
+                            divNode.AppendChild(anchorNode);
+                            catMenuLINode.AppendChild(divNode);
+                        }
+                    }
+
+                    HtmlNodeCollection buttonNodes = catMenuDocumentNode.SelectNodes("//button");
+                    if (buttonNodes != null)
+                    {
+                        foreach (HtmlNode buttonNode in buttonNodes)
+                        {
+                            buttonNode.SetAttributeValue("class", "collapsible-menu__button");
                         }
                     }
 
                     // Clean hrefs and set active category
-                    HtmlNodeCollection tocAnchorNodes = tocDocumentNode.SelectNodes("//a");
-                    CleanHrefs(tocAnchorNodes, documentBaseUri, tocAbsUri);
-                    SetActive(tocAnchorNodes, documentPath, documentAbsUri, documentBaseUri);
-
-                    // Add TOC to page
-                    HtmlNode categoryPagesNode = documentNode.SelectSingleNode("//*[@id='category-pages']");
-                    categoryPagesNode.AppendChild(tocDocumentNode);
-
-                    // Breadcrumbs
-                    List<(string, string, string)> breadcrumbs = new List<(string, string, string)>();
-
-                    // Traverse up from active anchor, retrieve text from each one
-                    HtmlNode currentNode = tocDocumentNode.SelectSingleNode("//*[@class='active']").ParentNode;
-                    while (currentNode.Name != "nav")
+                    HtmlNodeCollection catMenuAnchorNodes = catMenuDocumentNode.SelectNodes("//a");
+                    CleanHrefs(catMenuAnchorNodes, documentBaseUri, catMenuAbsUri);
+                    HtmlNode activeCatMenuNode = GetActiveNode(catMenuAnchorNodes, documentPath, documentAbsUri, documentBaseUri);
+                    if (activeCatMenuNode != null)
                     {
-                        if (currentNode.Name == "li")
+                        activeCatMenuNode.ParentNode.SetAttributeValue("class",
+                            activeCatMenuNode.ParentNode.GetAttributeValue("class", null) + " collapsible-menu__hover-area--active");
+
+                        // Traverse up from active anchor, retrieve text from each one and add class collapsible-menu__node--expanded if class collapsible-menu__node--expandable exists
+                        HtmlNode currentNode = activeCatMenuNode.ParentNode;
+                        while (currentNode.Name != "#document")
                         {
-                            HtmlNode textNode = currentNode.SelectSingleNode("a|span");
-                            breadcrumbs.Add((textNode.Name, textNode.InnerText.Trim(), textNode.GetAttributeValue("href", null)));
+                            if (currentNode.Name == "li")
+                            {
+                                HtmlNode textNode = currentNode.SelectSingleNode("./a|./span|./div/a|./div/span");
+                                breadcrumbs?.Add((textNode.Name, textNode.InnerText.Trim(), textNode.GetAttributeValue("href", null)));
+
+                                string classValue = currentNode.GetAttributeValue("class", null);
+                                string[] classes = classValue?.Split(' ');
+                                if (classes?.Contains("collapsible-menu__node--expandable") == true)
+                                {
+                                    currentNode.SetAttributeValue("class", classValue + " collapsible-menu__node--expanded");
+                                }
+                            }
+                            currentNode = currentNode.ParentNode;
                         }
-                        currentNode = currentNode.ParentNode;
+                    }
+
+                    // Add category menu pages to page
+                    HtmlNode catMenuContentNode = documentNode.SelectSingleNode("//div[@class='category-menu__content dropdown__body']");
+                    if (catMenuContentNode != null)
+                    {
+                        HtmlNode collapsibleMenuNode = catMenuHtmlDoc.CreateElement("div");
+                        collapsibleMenuNode.SetAttributeValue("class", "collapsible-menu category-menu__collapsible-menu");
+                        collapsibleMenuNode.AppendChild(catMenuDocumentNode.SelectSingleNode("/ul"));
+                        catMenuContentNode.AppendChild(collapsibleMenuNode);
                     }
 
                     // Get current category name
-                    HtmlNode activeNavbarAnchor = navbarNode.SelectSingleNode("//*[@class='active']");
-                    if (activeNavbarAnchor != null)
+                    if (createBreadcrumbs)
                     {
-                        string href = activeNavbarAnchor.GetAttributeValue("href", null);
-                        if (breadcrumbs.Last().Item3 != href) { // E.g navbar anchor is ./articles and toc topmost active anchor is also ./articles, redundant to list it twice
-
-                            breadcrumbs.Add(("a", activeNavbarAnchor.InnerText.Trim(), href));
+                        HtmlNode activeNavbarAnchor = navbarNode.SelectSingleNode("//*[@class='active']");
+                        if (activeNavbarAnchor != null)
+                        {
+                            string href = activeNavbarAnchor.GetAttributeValue("href", null);
+                            string name = activeNavbarAnchor.InnerText.Trim();
+                            breadcrumbs.Add(("a", name, href));
                         }
                     }
+                }
+                else if (createBreadcrumbs)
+                {
+                    // If catMenuRelPath == navRelPath, other than root, only 1 level in its breadcrumbs, e.g "Website Name | About"
+                    manifestItem.Metadata.TryGetValue("mimo_pageTitle", out object pageTitle);
+                    manifestItem.Metadata.TryGetValue("mimo_pageRelPath", out object pageRelPath);
 
-                    // Create UL
+                    breadcrumbs.Add(("a", Convert.ToString(pageTitle), Convert.ToString(pageRelPath)));
+                }
+
+                if (createBreadcrumbs)
+                {
+                    // Add root breadcrumb
+                    manifestItem.Metadata.TryGetValue("mimo_websiteName", out object websiteName);
+                    breadcrumbs.Add(("a", Convert.ToString(websiteName), "/"));
+
+                    // Create breadcrumbs UL
                     HtmlNode ulElement = htmlDoc.CreateElement("ul");
-                    foreach ((string elementName, string text, string href) in breadcrumbs)
+                    for (int i = 0; i < breadcrumbs.Count; i++)
                     {
+                        (string elementName, string text, string href) = breadcrumbs[i];
+
                         HtmlNode liElement = htmlDoc.CreateElement("li");
                         HtmlNode textElement = htmlDoc.CreateElement(elementName);
                         textElement.InnerHtml = text;
@@ -168,13 +242,27 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
                             textElement.SetAttributeValue("href", href);
                         }
                         liElement.AppendChild(textElement);
-
                         ulElement.PrependChild(liElement);
                     }
 
-                    // Add breadcrumbs to page
-                    HtmlNode breadcrumbsNode = documentNode.SelectSingleNode("//nav[@id='category-menu-header']");
-                    breadcrumbsNode.PrependChild(ulElement);
+                    HtmlNode barSeparatedListElement = htmlDoc.CreateElement("div");
+                    barSeparatedListElement.SetAttributeValue("class", "bar-separated-list bar-separated-list--interactive");
+                    barSeparatedListElement.AppendChild(ulElement);
+
+                    if (!disableCategoryMenu)
+                    {
+                        // Add breadcrumbs to page
+                        HtmlNode categoryMenuHeaderNode = documentNode.SelectSingleNode("//nav[contains(@class,'category-menu')]/header");
+                        HtmlNode barSeparatedListElementClone = barSeparatedListElement.CloneNode(true);
+                        categoryMenuHeaderNode.PrependChild(barSeparatedListElement);
+
+                    }
+
+                    if (!disableBreadcrumbs)
+                    {
+                        HtmlNode breadcrumbsNode = documentNode.SelectSingleNode("//nav[@class='breadcrumbs']");
+                        breadcrumbsNode?.AppendChild(barSeparatedListElement.CloneNode(true));
+                    }
                 }
 
                 // Save changes
@@ -204,40 +292,32 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
             }
         }
 
-        private void SetActive(HtmlNodeCollection anchorNodes, string documentPath, Uri documentAbsUri, Uri documentBaseUri, bool matchDir = false)
+        private HtmlNode GetActiveNode(HtmlNodeCollection anchorNodes, string documentPath, Uri documentAbsUri, Uri documentBaseUri, bool matchDir = false)
         {
             foreach (HtmlNode anchorNode in anchorNodes)
             {
                 // TODO What to do if href is absolute?
                 string href = anchorNode.GetAttributeValue("href", null);
-                Uri pageAbsUri;
-                if (href.StartsWith("/")) // Root of file scheme is the drive, we want the _site folder to be the root
-                {
-                    pageAbsUri = new Uri(documentBaseUri, href.Substring(1));
-                }
-                else
-                {
-                    pageAbsUri = new Uri(documentAbsUri, href);
-                }
+                // Root of file scheme is the drive, we want the _site folder to be the root
+                Uri anchorNodeTargetUri = href.StartsWith("/") ? new Uri(documentBaseUri, href.Substring(1)) : new Uri(documentAbsUri, href);
 
-                if (pageAbsUri.AbsolutePath == documentPath) // Direct match, anchor refers to the document
+                if (anchorNodeTargetUri.AbsolutePath == documentPath) // Direct match, anchor refers to the document
                 {
-                    anchorNode.SetAttributeValue("class", "active");
-                    break;
+                    return anchorNode;
                 }
-
-                if (!matchDir) // We only want direct matches, continue
+                else if (!matchDir) // We only want direct matches, continue
                 {
                     continue;
                 }
 
-                // TODO consider closes match?
-                if (documentPath.StartsWith(pageAbsUri.AbsolutePath)) // E.g pageAbsUri is <site>/articles, document is <site>/articles/my-article. 
+                // TODO what if some anchor node targets are parts of the same path, e.g <site>/articles/new/ and <site>/articles. Consider closes match?
+                if (documentPath.StartsWith(anchorNodeTargetUri.AbsolutePath)) // E.g pageAbsUri is <site>/articles, document is <site>/articles/my-article. 
                 {
-                    anchorNode.SetAttributeValue("class", "active");
-                    break;
+                    return anchorNode;
                 }
             }
+
+            return null;
         }
     }
 }
