@@ -65,15 +65,17 @@ namespace JeremyTCD.DocFx.Plugins.AbsolutePathResolver
                 // Get HtmlDocument
                 HtmlDocument htmlDoc = manifestItem.GetHtmlOutputDoc(outputFolder);
 
-                // Update all href and src attributes
-                foreach(HtmlNode htmlNode in htmlDoc.DocumentNode.SelectNodes("//*[starts-with(@href, '/')]"))
+                // Update href and src attributes that aren't absolute urls or relative hash urls
+                foreach(HtmlNode htmlNode in htmlDoc.DocumentNode.SelectNodes("//*[@href != '' and not(starts-with(@href, 'http://') or starts-with(@href, 'https://') or starts-with(@href, '#'))]"))
                 {
-                    string newHref = prefix + htmlNode.GetAttributeValue("href", null);
+                    string href = htmlNode.GetAttributeValue("href", null);
+                    string newHref = href.StartsWith("/") ? prefix + href : prefix + "/" + href; // Absolute relative path does not need to start with /
                     htmlNode.SetAttributeValue("href", newHref);
                 }
-                foreach (HtmlNode htmlNode in htmlDoc.DocumentNode.SelectNodes("//*[starts-with(@src, '/')]"))
+                foreach (HtmlNode htmlNode in htmlDoc.DocumentNode.SelectNodes("//*[@src != '' and not(starts-with(@href, 'http://') or starts-with(@href, 'https://') or starts-with(@href, '#'))]"))
                 {
-                    string newSrc = prefix + htmlNode.GetAttributeValue("src", null);
+                    string src = htmlNode.GetAttributeValue("src", null);
+                    string newSrc = src.StartsWith("/") ? prefix + src : prefix + "/" + src;
                     htmlNode.SetAttributeValue("src", newSrc);
                 }
 
