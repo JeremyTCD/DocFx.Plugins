@@ -29,6 +29,7 @@ namespace JeremyTCD.DocFx.Plugins.Presets
                     content["mimo_includeInSearchIndex"] = false;
                     content["mimo_disableEditArticle"] = true;
                     content["mimo_disableMetadata"] = true;
+                    content["mimo_disableBreadcrumbs"] = true;
                     content["mimo_disableCategoryMenu"] = true;
                     content["mimo_disableArticleMenu"] = true;
                     content["mimo_unneededFontPreloads"] = new string[] { "/resources/ibm-plex-mono-v3-latin-regular.woff2" };
@@ -38,6 +39,19 @@ namespace JeremyTCD.DocFx.Plugins.Presets
                 if (content.TryGetValue("mimo_isSearchableDisplay", out object mimo_isSearchableDisplay) && (mimo_isSearchableDisplay as bool?) == true)
                 {
                     content["mimo_includeInSal"] = false;
+                    content["mimo_disableEditArticle"] = true;
+                    content["mimo_disableMetadata"] = true;
+                    content["mimo_disableBreadcrumbs"] = true;
+                    content["mimo_disableCategoryMenu"] = true;
+                    content["mimo_disableArticleMenu"] = true;
+                    content["mimo_unneededFontPreloads"] = new string[] { "/resources/ibm-plex-mono-v3-latin-regular.woff2" };
+                }
+
+                // Page with just text.
+                if (content.TryGetValue("mimo_isText", out object mimo_isText) && (mimo_isText as bool?) == true)
+                {
+                    content["mimo_includeInSal"] = false;
+                    content["mimo_includeInSearchIndex"] = false;
                     content["mimo_disableEditArticle"] = true;
                     content["mimo_disableMetadata"] = true;
                     content["mimo_disableCategoryMenu"] = true;
