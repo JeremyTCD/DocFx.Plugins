@@ -43,37 +43,24 @@ namespace JeremyTCD.DocFx.Plugins.OutlineGenerator
                     GetHtmlOutputDoc(outputFolder).
                     DocumentNode;
 
-                // Get article node
-                HtmlNode articleNode = documentNode.SelectSingleNode("//article[@class='main-article']");
+                // Get main article node
+                HtmlNode mainArticleNode = documentNode.SelectSingleNode($"//article[@class='{UtilsConstants.MainArticleClasses}']");
 
                 // Generate outline tree for article
-                OutlineNode rootOutlineNode = new OutlineNode
-                {
-                    Content = articleNode.SelectSingleNode("h1").InnerText,
-                    Level = 1,
-                    Href = "#"
-                };
-                GenerateOutlineTree(articleNode, rootOutlineNode); // content div is the direct parent level 2 sections
+                OutlineNode rootOutlineNode = new OutlineNode();
+                GenerateOutlineTree(mainArticleNode, rootOutlineNode);
 
                 // Render outline tree
                 var outlineHtmlDoc = new HtmlDocument();
                 HtmlNode rootULElement = outlineHtmlDoc.CreateElement("ul");
-                rootULElement.SetAttributeValue("class", "level-2");
+                rootULElement.SetAttributeValue("class", "article-menu__outline outline");
                 GenerateOutlineNodes(rootULElement, rootOutlineNode, outlineHtmlDoc);
 
                 // Insert title
-                HtmlNode outlineElement = documentNode.SelectSingleNode("//*[@id='outline']");
-                HtmlNode titleSpanElement = outlineHtmlDoc.CreateElement("span");
-                titleSpanElement.InnerHtml = rootOutlineNode.Content;
-                HtmlNode titleAElement = outlineHtmlDoc.CreateElement("a");
-                titleAElement.SetAttributeValue("href", "#");
-                titleAElement.SetAttributeValue("class", "level-1");
-                titleAElement.AppendChild(titleSpanElement);
-                outlineElement.PrependChild(titleAElement);
+                HtmlNode articleMenuContentElement = documentNode.SelectSingleNode("//*[@class='article-menu__content dropdown__body']");
 
                 // Insert outline tree
-                HtmlNode outlineScrollableElement = outlineElement.SelectSingleNode("*[@id='outline-scrollable']");
-                outlineScrollableElement.AppendChild(rootULElement);
+                articleMenuContentElement.AppendChild(rootULElement);
 
                 // Save
                 string relPath = manifestItem.GetHtmlOutputRelPath();
@@ -83,9 +70,9 @@ namespace JeremyTCD.DocFx.Plugins.OutlineGenerator
             return manifest;
         }
 
-        private void GenerateOutlineNodes(HtmlNode ulElement, OutlineNode outlineNode, HtmlDocument outlineHtmlDoc)
+        private void GenerateOutlineNodes(HtmlNode ulElement, OutlineNode outlineNodes, HtmlDocument outlineHtmlDoc)
         {
-            foreach (OutlineNode childOutlineNode in outlineNode.Children)
+            foreach (OutlineNode childOutlineNode in outlineNodes.Children)
             {
                 HtmlNode liElement = outlineHtmlDoc.CreateElement("li");
                 HtmlNode aElement = outlineHtmlDoc.CreateElement("a");
@@ -95,19 +82,11 @@ namespace JeremyTCD.DocFx.Plugins.OutlineGenerator
                 aElement.AppendChild(spanElement);
                 liElement.AppendChild(aElement);
                 ulElement.AppendChild(liElement);
+                ulElement.SetAttributeValue("style", $"--level: {childOutlineNode.Level}");
 
-                // Scrollabe track
-                if(outlineNode.Level == 1)
-                {
-                    HtmlNode indicatorTrackElement = outlineHtmlDoc.CreateElement("div");
-                    indicatorTrackElement.SetAttributeValue("class", "outline-scrollable-track");
-                    liElement.AppendChild(indicatorTrackElement);
-                }
-
-                if (childOutlineNode.Children.Count > 0 && childOutlineNode.Level < 3) // Don't include h4s, h5s and h6s
+                if (childOutlineNode.Children.Count > 0)
                 {
                     HtmlNode childULElement = outlineHtmlDoc.CreateElement("ul");
-                    childULElement.SetAttributeValue("class", $"level-{childOutlineNode.Level + 1}");
                     liElement.AppendChild(childULElement);
 
                     GenerateOutlineNodes(childULElement, childOutlineNode, outlineHtmlDoc);
@@ -115,26 +94,30 @@ namespace JeremyTCD.DocFx.Plugins.OutlineGenerator
             }
         }
 
-        private OutlineNode GenerateOutlineTree(HtmlNode htmlNode, OutlineNode outlineNode)
+        private OutlineNode GenerateOutlineTree(HtmlNode sectioningContentNode, OutlineNode parentOutlineNode)
         {
-            foreach (HtmlNode childHtmlNode in htmlNode.ChildNodes)
+            OutlineNode outlineNode = null;
+
+            foreach (HtmlNode childNode in sectioningContentNode.ChildNodes)
             {
-                // Intentionally skips sub trees since they do not contribute to the document's outline. Sub trees are children of 
-                // sectioning content roots, like blockquote. If child is a blockquote, we never iterate through its children, so sub trees are ignored.
-                if (childHtmlNode.Name == "section")
+                if (childNode.Name == "header")
                 {
-                    // We don't know the heading tag level, could be h2|h3|h4|h5|h6.
-                    HtmlNode headingElement = childHtmlNode.SelectSingleNode("header/*[self::h2 or self::h3 or self::h4 or self::h5 or self::h6]");
+                    HtmlNode headingElement = childNode.SelectSingleNode("*");
                     int level = headingElement.Name[1] - 48; // http://www.asciitable.com/
-                    OutlineNode childOutlineNode = new OutlineNode
+                    outlineNode = new OutlineNode
                     {
                         Content = headingElement.InnerText,
                         Level = level,
-                        Href = "#" + childHtmlNode.Id
+                        Href = "#" + sectioningContentNode.Id
                     };
-                    outlineNode.Children.Add(childOutlineNode);
+                    parentOutlineNode.Children.Add(outlineNode);
+                }
 
-                    GenerateOutlineTree(childHtmlNode, childOutlineNode);
+                // Intentionally skips sub trees since they do not contribute to the document's outline. Sub trees are children of 
+                // sectioning content roots other than section and article.
+                if (childNode.Name == "section" && outlineNode?.Level < 3) // Don't include h4s, h5s and h6s
+                {
+                    GenerateOutlineTree(childNode, outlineNode);
                 }
             }
 
