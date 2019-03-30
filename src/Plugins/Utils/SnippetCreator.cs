@@ -7,7 +7,7 @@ namespace JeremyTCD.DocFx.Plugins.Utils
     {
         public static HtmlNode CreateSnippet(HtmlNode article, string href)//, int snippetLength)
         {
-            HtmlNode snippet = HtmlNode.CreateNode("<article></article>");
+            HtmlNode snippet = HtmlNode.CreateNode("<article class=\"article\"></article>");
 
             // Article url
             string articleUrl = "/" + href.Replace(".html", "");

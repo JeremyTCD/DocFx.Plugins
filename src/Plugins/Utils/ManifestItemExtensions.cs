@@ -36,7 +36,7 @@ namespace JeremyTCD.DocFx.Plugins.Utils
             HtmlNode articleNode = manifestItem.
                 GetHtmlOutputDoc(outputFolder).
                 DocumentNode.
-                SelectSingleNode($"//article[@class='{UtilsConstants.ArticleClass}']");
+                SelectSingleNode($"//article[@class='{UtilsConstants.MainArticleClasses}']");
 
             if (articleNode == null)
             {
