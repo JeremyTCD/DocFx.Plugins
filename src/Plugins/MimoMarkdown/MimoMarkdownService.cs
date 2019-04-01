@@ -117,12 +117,11 @@
                 UseFlexiBlocks(
                     alertBlocksExtensionOptions: flexiAlertBlocksExtensionOptions,
                     codeBlocksExtensionOptions: flexiCodeBlocksExtensionOptions,
-                    sectionBlocksExtensionOptions: flexiSectionBlocksExtensionOptions,
                     includeBlocksExtensionOptions: flexiIncludeBlocksExtensionOptions,
+                    sectionBlocksExtensionOptions: flexiSectionBlocksExtensionOptions,
                     tableBlocksExtensionOptions: flexiTableBlocksExtensionOptions);
 
             builder.Extensions.Add(new CustomYamlHeaderExtension(new MarkdownContext()));
-            builder.Extensions.Add(new ExplicitParagraphsExtension());
 
             return builder.Build();
         }
