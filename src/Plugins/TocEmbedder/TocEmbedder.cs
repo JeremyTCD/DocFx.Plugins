@@ -106,6 +106,8 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
                     // Convert cat menu into a collapsible menu
                     // Create master buttonNode
                     HtmlNode masterButtonNode = catMenuHtmlDoc.CreateElement("button");
+                    masterButtonNode.SetAttributeValue("title", "Expand category");
+                    masterButtonNode.SetAttributeValue("aria-label", "Expand category");
                     HtmlNode masterSvgNode = catMenuHtmlDoc.CreateElement("svg");
                     HtmlNode masterUseNode = catMenuHtmlDoc.CreateElement("use");
                     masterUseNode.SetAttributeValue("xlink:href", "#material-design-chevron-right");
