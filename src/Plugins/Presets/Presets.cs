@@ -29,6 +29,7 @@ namespace JeremyTCD.DocFx.Plugins.Presets
                     content["mimo_includeInSearchIndex"] = false;
                     content["mimo_disableEditArticle"] = true;
                     content["mimo_disableMetadata"] = true;
+                    content["mimo_disableArticleTitle"] = true;
                     content["mimo_disableBreadcrumbs"] = true;
                     content["mimo_disableCategoryMenu"] = true;
                     content["mimo_disableArticleMenu"] = true;
@@ -41,6 +42,7 @@ namespace JeremyTCD.DocFx.Plugins.Presets
                     content["mimo_includeInSal"] = false;
                     content["mimo_disableEditArticle"] = true;
                     content["mimo_disableMetadata"] = true;
+                    content["mimo_disableArticleTitle"] = true;
                     content["mimo_disableBreadcrumbs"] = true;
                     content["mimo_disableCategoryMenu"] = true;
                     content["mimo_disableArticleMenu"] = true;
