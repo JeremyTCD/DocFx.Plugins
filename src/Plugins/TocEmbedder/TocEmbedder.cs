@@ -197,7 +197,19 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
                     {
                         HtmlNode collapsibleMenuNode = catMenuHtmlDoc.CreateElement("div");
                         collapsibleMenuNode.SetAttributeValue("class", "collapsible-menu category-menu__collapsible-menu");
-                        collapsibleMenuNode.AppendChild(catMenuDocumentNode.SelectSingleNode("/ul"));
+                        // Scrollable
+                        HtmlNode scrollableNode = htmlDoc.CreateElement("div");
+                        scrollableNode.SetAttributeValue("class", "scrollable-indicators");
+                        HtmlNode startIndicatorElement = htmlDoc.CreateElement("div");
+                        startIndicatorElement.SetAttributeValue("class", "scrollable-indicators__indicator scrollable-indicators__indicator--vertical-start");
+                        HtmlNode endIndicatorElement = htmlDoc.CreateElement("div");
+                        endIndicatorElement.SetAttributeValue("class", "scrollable-indicators__indicator scrollable-indicators__indicator--vertical-end");
+                        HtmlNode ulElement = catMenuDocumentNode.SelectSingleNode("/ul");
+                        ulElement.SetAttributeValue("class", "scrollable-indicators__scrollable");
+                        scrollableNode.AppendChild(ulElement);
+                        scrollableNode.AppendChild(startIndicatorElement);
+                        scrollableNode.AppendChild(endIndicatorElement);
+                        collapsibleMenuNode.AppendChild(scrollableNode);
                         catMenuContentNode.AppendChild(collapsibleMenuNode);
                     }
 
@@ -230,6 +242,7 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
 
                     // Create breadcrumbs UL
                     HtmlNode ulElement = htmlDoc.CreateElement("ul");
+                    ulElement.SetAttributeValue("class", "scrollable-indicators__scrollable");
                     for (int i = 0; i < breadcrumbs.Count; i++)
                     {
                         (string elementName, string text, string href) = breadcrumbs[i];
@@ -247,7 +260,16 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
 
                     HtmlNode barSeparatedListElement = htmlDoc.CreateElement("div");
                     barSeparatedListElement.SetAttributeValue("class", "bar-separated-list bar-separated-list--interactive");
-                    barSeparatedListElement.AppendChild(ulElement);
+                    HtmlNode scrollableNode = htmlDoc.CreateElement("div");
+                    scrollableNode.SetAttributeValue("class", "scrollable-indicators");
+                    HtmlNode startIndicatorElement = htmlDoc.CreateElement("div");
+                    startIndicatorElement.SetAttributeValue("class", "scrollable-indicators__indicator scrollable-indicators__indicator--horizontal-start");
+                    HtmlNode endIndicatorElement = htmlDoc.CreateElement("div");
+                    endIndicatorElement.SetAttributeValue("class", "scrollable-indicators__indicator scrollable-indicators__indicator--horizontal-end");
+                    scrollableNode.AppendChild(ulElement);
+                    scrollableNode.AppendChild(startIndicatorElement);
+                    scrollableNode.AppendChild(endIndicatorElement);
+                    barSeparatedListElement.AppendChild(scrollableNode);
 
                     if (!disableCategoryMenu)
                     {
