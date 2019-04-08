@@ -13,7 +13,7 @@ namespace JeremyTCD.DocFx.Plugins.Utils
             string articleUrl = "/" + href.Replace(".html", "");
 
             // Title
-            HtmlNode titleNode = article.SelectSingleNode(".//h1[contains(@class, 'title')]");
+            HtmlNode titleNode = article.SelectSingleNode(".//h1");
             if (titleNode == null)
             {
                 // Title node is used as link to the article, it is mandatory
@@ -22,8 +22,7 @@ namespace JeremyTCD.DocFx.Plugins.Utils
             }
             HtmlNode titleAnchorNode = HtmlNode.CreateNode($"<a href=\"{articleUrl}\"></a>");
             titleAnchorNode.InnerHtml = titleNode.InnerText;
-            HtmlNode newTitleNode = titleNode.CloneNode(false);
-            newTitleNode.InnerHtml = "";
+            HtmlNode newTitleNode = HtmlNode.CreateNode("<h1 class=\"article__title\"></h1>"); // We might be converting banner titles to article titles
             newTitleNode.AppendChild(titleAnchorNode);
             snippet.AppendChild(newTitleNode);
 
@@ -45,6 +44,9 @@ namespace JeremyTCD.DocFx.Plugins.Utils
                     string newHref = articleUrl + htmlNode.GetAttributeValue("href", null);
                     htmlNode.SetAttributeValue("href", newHref);
                 }
+
+                // Remove any classes (we want text to display uniformly for all snippets, e.g banner__blurb should not affect how text is displayed in snippet)
+                descriptionNode.Attributes.Remove("class");
 
                 // Append content
                 snippet.AppendChild(descriptionNode.CloneNode(true));
