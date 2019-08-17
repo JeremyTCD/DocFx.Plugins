@@ -58,8 +58,19 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
                 navbarHtmlDoc.Load(navbarAbsUri.AbsolutePath, Encoding.UTF8);
                 HtmlNode navbarDocumentNode = navbarHtmlDoc.DocumentNode;
 
-                // Clean hrefs and set active category
+                // Set navbar classes
+                navbarDocumentNode.SelectSingleNode("ul").SetAttributeValue("class", "navbar__list");
+                foreach (HtmlNode navbarItemNode in navbarDocumentNode.SelectNodes("/ul/li"))
+                {
+                    navbarItemNode.SetAttributeValue("class", "navbar__item");
+                }
+
+                // Clean hrefs, set classes and set active category
                 HtmlNodeCollection navbarAnchorNodes = navbarDocumentNode.SelectNodes("//a");
+                foreach (HtmlNode navbarAnchorNode in navbarAnchorNodes)
+                {
+                    navbarAnchorNode.SetAttributeValue("class", "navbar__link");
+                }
                 CleanHrefs(navbarAnchorNodes, documentBaseUri, navbarAbsUri);
                 HtmlNode activeNavbarNode = GetActiveNode(navbarAnchorNodes, documentPath, documentAbsUri, documentBaseUri, true);
                 activeNavbarNode?.SetAttributeValue("class", "active");
@@ -67,7 +78,7 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
                 // Add navbar to page
                 HtmlNode navbarNode = documentNode.SelectSingleNode("//*[@class='page-header__content dropdown__body']");
                 HtmlNode navbarWrapper = navbarHtmlDoc.CreateElement("nav");
-                navbarWrapper.SetAttributeValue("class", "page-header__navbar");
+                navbarWrapper.SetAttributeValue("class", "page-header__navbar navbar");
                 navbarWrapper.AppendChild(navbarDocumentNode);
                 navbarNode.PrependChild(navbarWrapper);
 
@@ -109,6 +120,7 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
                     masterButtonNode.SetAttributeValue("title", "Expand category");
                     masterButtonNode.SetAttributeValue("aria-label", "Expand category");
                     HtmlNode masterSvgNode = catMenuHtmlDoc.CreateElement("svg");
+                    masterSvgNode.SetAttributeValue("class", "collapsible-menu__expand-icon");
                     HtmlNode masterUseNode = catMenuHtmlDoc.CreateElement("use");
                     masterUseNode.SetAttributeValue("xlink:href", "#material-design-chevron-right");
                     masterSvgNode.AppendChild(masterUseNode);
@@ -125,19 +137,21 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
                         if (ulNode != null)
                         {
                             ulNode.SetAttributeValue("class", "collapsible-menu__inner-list");
-                            catMenuLINode.SetAttributeValue("class", "collapsible-menu__node collapsible-menu__node--expandable");
+                            catMenuLINode.SetAttributeValue("class", "collapsible-menu__node collapsible-menu__node_expandable");
                             HtmlNode divNode = divNodeWithButtonMaster.Clone();
                             HtmlNode anchorNode = catMenuLINode.SelectSingleNode("./a");
 
                             if (anchorNode != null)
                             {
-                                divNode.SetAttributeValue("class", "collapsible-menu__hover-area collapsible-menu__hover-area--contains-link");
+                                anchorNode.SetAttributeValue("class", "collapsible-menu__node-content collapsible-menu__node-content_link");
+                                divNode.SetAttributeValue("class", "collapsible-menu__hover-area collapsible-menu__hover-area_contains-link");
                                 anchorNode.Remove();
                                 divNode.AppendChild(anchorNode);
                             }
                             else
                             {
                                 HtmlNode spanNode = catMenuLINode.SelectSingleNode("./span");
+                                spanNode.SetAttributeValue("class", "collapsible-menu__node-content collapsible-menu__node-content_text");
                                 spanNode.Remove();
                                 divNode.AppendChild(spanNode);
                             }
@@ -147,9 +161,10 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
                         {
                             catMenuLINode.SetAttributeValue("class", "collapsible-menu__node");
                             HtmlNode anchorNode = catMenuLINode.SelectSingleNode("./a");
+                            anchorNode.SetAttributeValue("class", "collapsible-menu__node-content collapsible-menu__node-content_link");
                             anchorNode.Remove();
                             HtmlNode divNode = divNodeMaster.Clone();
-                            divNode.SetAttributeValue("class", "collapsible-menu__hover-area collapsible-menu__hover-area--contains-link");
+                            divNode.SetAttributeValue("class", "collapsible-menu__hover-area collapsible-menu__hover-area_contains-link");
                             divNode.AppendChild(anchorNode);
                             catMenuLINode.AppendChild(divNode);
                         }
@@ -160,7 +175,7 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
                     {
                         foreach (HtmlNode buttonNode in buttonNodes)
                         {
-                            buttonNode.SetAttributeValue("class", "collapsible-menu__button");
+                            buttonNode.SetAttributeValue("class", "collapsible-menu__expand-button");
                         }
                     }
 
@@ -171,9 +186,9 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
                     if (activeCatMenuNode != null)
                     {
                         activeCatMenuNode.ParentNode.SetAttributeValue("class",
-                            activeCatMenuNode.ParentNode.GetAttributeValue("class", null) + " collapsible-menu__hover-area--active");
+                            activeCatMenuNode.ParentNode.GetAttributeValue("class", null) + " collapsible-menu__hover-area_active");
 
-                        // Traverse up from active anchor, retrieve text from each one and add class collapsible-menu__node--expanded if class collapsible-menu__node--expandable exists
+                        // Traverse up from active anchor, retrieve text from each one and add class collapsible-menu__node_expanded if class collapsible-menu__node_expandable exists
                         HtmlNode currentNode = activeCatMenuNode.ParentNode;
                         while (currentNode.Name != "#document")
                         {
@@ -184,9 +199,9 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
 
                                 string classValue = currentNode.GetAttributeValue("class", null);
                                 string[] classes = classValue?.Split(' ');
-                                if (classes?.Contains("collapsible-menu__node--expandable") == true)
+                                if (classes?.Contains("collapsible-menu__node_expandable") == true)
                                 {
-                                    currentNode.SetAttributeValue("class", classValue + " collapsible-menu__node--expanded");
+                                    currentNode.SetAttributeValue("class", classValue + " collapsible-menu__node_expanded");
                                 }
                             }
                             currentNode = currentNode.ParentNode;
@@ -201,11 +216,11 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
                         collapsibleMenuNode.SetAttributeValue("class", "collapsible-menu category-menu__collapsible-menu");
                         // Scrollable
                         HtmlNode scrollableNode = htmlDoc.CreateElement("div");
-                        scrollableNode.SetAttributeValue("class", "scrollable-indicators");
+                        scrollableNode.SetAttributeValue("class", "collapsible-menu__scrollable-indicators scrollable-indicators scrollable-indicators_axis_vertical");
                         HtmlNode startIndicatorElement = htmlDoc.CreateElement("div");
-                        startIndicatorElement.SetAttributeValue("class", "scrollable-indicators__indicator scrollable-indicators__indicator--vertical-start");
+                        startIndicatorElement.SetAttributeValue("class", "scrollable-indicators__indicator scrollable-indicators__indicator_start");
                         HtmlNode endIndicatorElement = htmlDoc.CreateElement("div");
-                        endIndicatorElement.SetAttributeValue("class", "scrollable-indicators__indicator scrollable-indicators__indicator--vertical-end");
+                        endIndicatorElement.SetAttributeValue("class", "scrollable-indicators__indicator scrollable-indicators__indicator_end");
                         HtmlNode ulElement = catMenuDocumentNode.SelectSingleNode("/ul");
                         ulElement.SetAttributeValue("class", "scrollable-indicators__scrollable");
                         scrollableNode.AppendChild(ulElement);
@@ -244,13 +259,16 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
 
                     // Create breadcrumbs UL
                     HtmlNode ulElement = htmlDoc.CreateElement("ul");
-                    ulElement.SetAttributeValue("class", "scrollable-indicators__scrollable");
+                    ulElement.SetAttributeValue("class", "bar-separated-list__list scrollable-indicators__scrollable");
                     for (int i = 0; i < breadcrumbs.Count; i++)
                     {
                         (string elementName, string text, string href) = breadcrumbs[i];
 
                         HtmlNode liElement = htmlDoc.CreateElement("li");
+                        liElement.SetAttributeValue("class", "bar-separated-list__item");
                         HtmlNode textElement = htmlDoc.CreateElement(elementName);
+                        textElement.SetAttributeValue("class",
+                            "bar-separated-list__item-content " + (elementName == "a" ? "bar-separated-list__item-content_link" : "bar-separated-list__item-content_text"));
                         textElement.InnerHtml = text;
                         if (href != null)
                         {
@@ -261,13 +279,13 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
                     }
 
                     HtmlNode barSeparatedListElement = htmlDoc.CreateElement("div");
-                    barSeparatedListElement.SetAttributeValue("class", "bar-separated-list bar-separated-list--interactive");
+                    barSeparatedListElement.SetAttributeValue("class", "bar-separated-list bar-separated-list_interactive");
                     HtmlNode scrollableNode = htmlDoc.CreateElement("div");
-                    scrollableNode.SetAttributeValue("class", "scrollable-indicators");
+                    scrollableNode.SetAttributeValue("class", "bar-separated-list__scrollable-indicators scrollable-indicators scrollable-indicators_axis_horizontal");
                     HtmlNode startIndicatorElement = htmlDoc.CreateElement("div");
-                    startIndicatorElement.SetAttributeValue("class", "scrollable-indicators__indicator scrollable-indicators__indicator--horizontal-start");
+                    startIndicatorElement.SetAttributeValue("class", "scrollable-indicators__indicator scrollable-indicators__indicator_start");
                     HtmlNode endIndicatorElement = htmlDoc.CreateElement("div");
-                    endIndicatorElement.SetAttributeValue("class", "scrollable-indicators__indicator scrollable-indicators__indicator--horizontal-end");
+                    endIndicatorElement.SetAttributeValue("class", "scrollable-indicators__indicator scrollable-indicators__indicator_end");
                     scrollableNode.AppendChild(ulElement);
                     scrollableNode.AppendChild(startIndicatorElement);
                     scrollableNode.AppendChild(endIndicatorElement);

@@ -53,6 +53,7 @@ namespace JeremyTCD.DocFx.Plugins.OutlineGenerator
                 // Render outline tree
                 var outlineHtmlDoc = new HtmlDocument();
                 HtmlNode rootULElement = outlineHtmlDoc.CreateElement("ul");
+                rootULElement.SetAttributeValue("class", "outline__list outline__list_root");
                 GenerateOutlineNodes(rootULElement, rootOutlineNode, outlineHtmlDoc);
 
                 // Insert title
@@ -63,14 +64,14 @@ namespace JeremyTCD.DocFx.Plugins.OutlineGenerator
                 if (level2ULElement != null) // If there is no level2ULElement, there's no scrolling
                 {
                     // Wrap level 2 ul element in a div together with indicators, insert wrapper as child of level 2 ul element's parent
-                    level2ULElement.SetAttributeValue("class", "scrollable-indicators__scrollable outline__scrollable");
+                    level2ULElement.SetAttributeValue("class", "outline__list scrollable-indicators__scrollable outline__scrollable");
                     level2ULElement.Remove();
                     HtmlNode scrollableIndicatorsNode = outlineHtmlDoc.CreateElement("div");
-                    scrollableIndicatorsNode.SetAttributeValue("class", "scrollable-indicators");
+                    scrollableIndicatorsNode.SetAttributeValue("class", "outline__scrollable-indicators scrollable-indicators scrollable-indicators_axis_vertical");
                     HtmlNode startIndicatorElement = outlineHtmlDoc.CreateElement("div");
-                    startIndicatorElement.SetAttributeValue("class", "scrollable-indicators__indicator scrollable-indicators__indicator--vertical-start");
+                    startIndicatorElement.SetAttributeValue("class", "scrollable-indicators__indicator scrollable-indicators__indicator_start");
                     HtmlNode endIndicatorElement = outlineHtmlDoc.CreateElement("div");
-                    endIndicatorElement.SetAttributeValue("class", "scrollable-indicators__indicator scrollable-indicators__indicator--vertical-end");
+                    endIndicatorElement.SetAttributeValue("class", "scrollable-indicators__indicator scrollable-indicators__indicator_end");
                     scrollableIndicatorsNode.AppendChild(level2ULElement);
                     scrollableIndicatorsNode.AppendChild(startIndicatorElement);
                     scrollableIndicatorsNode.AppendChild(endIndicatorElement);
@@ -94,16 +95,27 @@ namespace JeremyTCD.DocFx.Plugins.OutlineGenerator
 
         private void GenerateOutlineNodes(HtmlNode ulElement, OutlineNode outlineNodes, HtmlDocument outlineHtmlDoc)
         {
+            bool firstChild = true;
             foreach (OutlineNode childOutlineNode in outlineNodes.Children)
             {
                 HtmlNode liElement = outlineHtmlDoc.CreateElement("li");
-                if(childOutlineNode.Level == 1)
-                {
-                    liElement.SetAttributeValue("class", "outline__root-node");
-                }
+                liElement.SetAttributeValue("class", $"outline__node outline__node_level_{childOutlineNode.Level}");
                 HtmlNode aElement = outlineHtmlDoc.CreateElement("a");
+                if (childOutlineNode.Level == 2 && firstChild)
+                {
+                    aElement.SetAttributeValue("class", "outline__link outline__link_has-bar outline__link_indented");
+                }
+                else if(childOutlineNode.Level == 1)
+                {
+                    aElement.SetAttributeValue("class", "outline__link outline__link_title");
+                }
+                else
+                {
+                    aElement.SetAttributeValue("class", "outline__link outline__link_indented");
+                }
                 aElement.SetAttributeValue("href", childOutlineNode.Href);
                 HtmlNode spanElement = outlineHtmlDoc.CreateElement("span");
+                spanElement.SetAttributeValue("class", "outline__text");
                 spanElement.InnerHtml = childOutlineNode.Content;
                 aElement.AppendChild(spanElement);
                 liElement.AppendChild(aElement);
@@ -113,10 +125,13 @@ namespace JeremyTCD.DocFx.Plugins.OutlineGenerator
                 if (childOutlineNode.Children.Count > 0)
                 {
                     HtmlNode childULElement = outlineHtmlDoc.CreateElement("ul");
+                    childULElement.SetAttributeValue("class", "outline__list");
                     liElement.AppendChild(childULElement);
 
                     GenerateOutlineNodes(childULElement, childOutlineNode, outlineHtmlDoc);
                 }
+
+                firstChild = false;
             }
         }
 
