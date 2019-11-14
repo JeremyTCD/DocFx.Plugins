@@ -1,7 +1,6 @@
 ﻿using HtmlAgilityPack;
 using JeremyTCD.DocFx.Plugins.Utils;
 using Microsoft.DocAsCode.Common;
-using Microsoft.DocAsCode.MarkdownLite;
 using Microsoft.DocAsCode.Plugins;
 using Newtonsoft.Json;
 using System;
@@ -9,16 +8,31 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
 using System.IO;
-using System.Security.Cryptography;
-using System.Text;
+using System.Linq;
 using System.Text.RegularExpressions;
+using System.Web;
 
 namespace JeremyTCD.DocFx.Plugins.SearchIndexGenerator
 {
     [Export(nameof(SearchIndexGenerator), typeof(IPostProcessor))]
     public class SearchIndexGenerator : IPostProcessor
     {
-        private static readonly Regex RegexWhiteSpace = new Regex(@"\s+", RegexOptions.Compiled);
+        private static readonly Regex _regexWhiteSpace = new Regex(@"\s+", RegexOptions.Compiled);
+        private static readonly JsonSerializerSettings _jsonSerializerSettings = new JsonSerializerSettings
+        {
+            NullValueHandling = NullValueHandling.Ignore
+        };
+        // Blocks that're inline by default - https://developer.mozilla.org/en-US/docs/Web/HTML/Inline_elements.
+        // We use these to lump article text up according to the "block" element they're contained in.
+        // This approach isn't perfect because "inline" elements may be used as blocks, e.g <a> element can contain flow content.
+        // Nonetheless, this methods provides better search results than not bothering to split text up at all.
+        private static readonly List<string> _inlineElementNames = new List<string>
+        {
+            "abbr", "acronym", "audio", "b", "bdi", "bdo", "big", "br", "button", "canvas", "cite", "code", "data", "datalist", "del", "dfn",
+            "em", "embed", "i", "iframe", "img", "input", "ins", "kbd", "label", "map", "mark", "meter", "noscript", "object", "output", "picture",
+            "progress", "q", "ruby", "s", "samp", "script", "select", "slot", "small", "span", "strong", "sub", "sup", "svg", "template", "textarea",
+            "time", "u", "tt", "var", "video", "wbr"
+        };
 
         public ImmutableDictionary<string, object> PrepareMetadata(ImmutableDictionary<string, object> metadata)
         {
@@ -33,14 +47,12 @@ namespace JeremyTCD.DocFx.Plugins.SearchIndexGenerator
                 throw new ArgumentNullException("Base directory cannot be null");
             }
 
-            Dictionary<string, SearchIndexItem> SearchIndexItems = GetSearchIndexItems(outputFolder, manifest);
-            if (SearchIndexItems.Count == 0)
+            List<SearchIndexItem> searchIndexItems = GetSearchIndexItems(outputFolder, manifest);
+            if (searchIndexItems.Count == 0)
             {
                 return manifest;
             }
-
-            // Sort dictionary so json is produced deterministically
-            SortedDictionary<string, SearchIndexItem> sortedSearchIndexItems = new SortedDictionary<string, SearchIndexItem>(SearchIndexItems);
+            searchIndexItems.Sort(); // We're just sorting for deterministic output, so we use the simplest comparer
 
             // Create file name
             string indexFile = Path.Combine(outputFolder, "resources", "index.json");
@@ -56,19 +68,18 @@ namespace JeremyTCD.DocFx.Plugins.SearchIndexGenerator
 
                 HtmlDocument htmlDoc = manifestItem.GetHtmlOutputDoc(outputFolder);
                 HtmlNode headElement = htmlDoc.DocumentNode.SelectSingleNode("//head");
-                HtmlNode linkElement = htmlDoc.CreateElement("link");
-                linkElement.SetAttributeValue("rel", "preload");
-                linkElement.SetAttributeValue("href", "/" + relativePath);
-                linkElement.SetAttributeValue("as", "fetch");
-                linkElement.SetAttributeValue("type", "application/json");
-                linkElement.SetAttributeValue("crossorigin", "anonymous");
+                HtmlNode linkElement = htmlDoc.CreateElement("meta");
+                // Recommendation is to "register a new link type" if content is a URL - https://html.spec.whatwg.org/multipage/semantics.html#other-metadata-names.
+                // Seems like bad advice, only a couple of organizations have applied what about the millions of lesser use cases?
+                linkElement.SetAttributeValue("name", "mimo-search-index");
+                linkElement.SetAttributeValue("content", "/" + relativePath);
                 headElement.AppendChild(linkElement);
                 string relPath = manifestItem.GetHtmlOutputRelPath();
                 File.WriteAllText(Path.Combine(outputFolder, relPath), htmlDoc.DocumentNode.OuterHtml);
             }
 
             // Write to disk
-            string json = JsonConvert.SerializeObject(sortedSearchIndexItems, Formatting.Indented);
+            string json = JsonConvert.SerializeObject(searchIndexItems, Formatting.Indented, _jsonSerializerSettings);
             OutputSearchIndex(relativePath, indexFile, manifest, json);
 
             return manifest;
@@ -76,7 +87,16 @@ namespace JeremyTCD.DocFx.Plugins.SearchIndexGenerator
 
         private void OutputSearchIndex(string relativePath, string indexFile, Manifest manifest, string json)
         {
-            Directory.CreateDirectory(Directory.GetParent(indexFile).FullName);
+            string directory = Directory.GetParent(indexFile).FullName;
+            Directory.CreateDirectory(directory); // If not created, create
+
+            // Delete existing index
+            foreach (string file in Directory.GetFiles(directory, "index.*json"))
+            {
+                File.Delete(file);
+            }
+
+            // Create new index
             File.WriteAllText(indexFile, json);
 
             var manifestItem = new ManifestItem
@@ -92,9 +112,9 @@ namespace JeremyTCD.DocFx.Plugins.SearchIndexGenerator
             manifest.Files?.Add(manifestItem);
         }
 
-        private Dictionary<string, SearchIndexItem> GetSearchIndexItems(string outputFolder, Manifest manifest)
+        private List<SearchIndexItem> GetSearchIndexItems(string outputFolder, Manifest manifest)
         {
-            Dictionary<string, SearchIndexItem> SearchIndexItems = new Dictionary<string, SearchIndexItem>();
+            List<SearchIndexItem> SearchIndexItems = new List<SearchIndexItem>();
 
             foreach (ManifestItem manifestItem in manifest.Files)
             {
@@ -109,23 +129,35 @@ namespace JeremyTCD.DocFx.Plugins.SearchIndexGenerator
                     continue;
                 }
 
-                string relPath = manifestItem.GetHtmlOutputRelPath();
+                // Text
                 HtmlNode articleNode = manifestItem.GetHtmlOutputArticleNode(outputFolder);
-                StringBuilder stringBuilder = new StringBuilder();
-                ExtractTextFromNode(articleNode, stringBuilder);
-                string text = NormalizeNodeText(stringBuilder.ToString());
-
-                manifestItem.Metadata.TryGetValue(SearchIndexConstants.SearchIndexSnippetLengthKey, out object length);
-                int searchIndexSnippetLength = length as int? ?? SearchIndexConstants.DefaultArticleSnippetLength;
-
-                HtmlNode snippet = SnippetCreator.CreateSnippet(articleNode, relPath);//, searchIndexSnippetLength);
-
-                SearchIndexItems.Add(relPath, new SearchIndexItem
+                articleNode.SelectSingleNode("//h1")?.Remove(); // Remove title
+                articleNode.SelectSingleNode("//div[@class='article__metadata metadata']")?.Remove(); // Remove metadata
+                foreach (HtmlNode commentNode in articleNode.SelectNodes("//comment()"))
                 {
-                    RelPath = relPath,
-                    SnippetHtml = snippet.OuterHtml,
-                    Text = text,
-                    Title = snippet.SelectSingleNode(".//h1[contains(@class, 'title')]/a").InnerText
+                    commentNode.Remove();
+                }
+                Stack<string> text = new Stack<string>();
+                ExtractTextFromNode(articleNode, text, false);
+
+                // Date
+                manifestItem.Metadata.TryGetValue("mimo_date", out object date);
+
+                // Title
+                manifestItem.Metadata.TryGetValue("mimo_pageTitle", out object title);
+
+                // Description
+                manifestItem.Metadata.TryGetValue("mimo_pageDescription", out object description);
+
+                List<string> textList = text.ToList();
+                textList.Reverse();
+                SearchIndexItems.Add(new SearchIndexItem
+                {
+                    Title = title as string,
+                    RelPath = "/" + manifestItem.GetHtmlOutputRelPath().Replace(".html", ""),
+                    Date = date as string,
+                    Text = textList,
+                    Description = description as string
                 });
             }
 
@@ -134,34 +166,62 @@ namespace JeremyTCD.DocFx.Plugins.SearchIndexGenerator
 
         private string NormalizeNodeText(string text)
         {
-            if (string.IsNullOrEmpty(text))
-            {
-                return string.Empty;
-            }
-            text = StringHelper.HtmlDecode(text);
-            return RegexWhiteSpace.Replace(text, " ").Trim();
+            text = HttpUtility.HtmlDecode(text);
+            return _regexWhiteSpace.Replace(text, " ").Trim();
         }
 
-        private void ExtractTextFromNode(HtmlNode node, StringBuilder stringBuilder)
+        // We split text up by block to avoid search results like "Version A version is a snapshot of a piece of software."
+        // where "Version" is actually the header for "A version is a snapshot of a piece of software."
+        // Instead we get "Version... A version is a snapshot of a piece of software.".
+        private void ExtractTextFromNode(HtmlNode node, Stack<string> text, bool append)
         {
-            // Note: Article's title is included separately in SearchIndexItem.Title
-            if (node.Name == "h1")
+            string blockText = append ? text.Pop() + " " : null; // We should pool StringBuilders
+            bool previousBlockNodeIsPara = false;
+            foreach (HtmlNode childNode in node.ChildNodes)
             {
-                return;
-            }
-
-            if (!node.HasChildNodes)
-            {
-                stringBuilder.Append(node.InnerText);
-                stringBuilder.Append(" ");
-            }
-            else
-            {
-                foreach (HtmlNode childNode in node.ChildNodes)
+                if (childNode.NodeType == HtmlNodeType.Text || IsInlineElement(childNode)) // Inline node or text
                 {
-                    ExtractTextFromNode(childNode, stringBuilder);
+                    string inlineText = childNode.InnerText;
+                    if (inlineText != null)
+                    {
+                        blockText += childNode.InnerText;
+                    }
+                }
+                else // Block node
+                {
+                    bool childNodeIsPara = childNode.Name == "p";
+                    ExtractTextFromNode(childNode, text, previousBlockNodeIsPara && childNodeIsPara); // Combine consecutive paragraphs
+                    previousBlockNodeIsPara = childNodeIsPara;
                 }
             }
+
+            if (!string.IsNullOrWhiteSpace(blockText))
+            {
+                text.Push(NormalizeNodeText(blockText));
+            }
+        }
+
+        private bool IsInlineElement(HtmlNode node)
+        {
+            string name = node.Name;
+            if (name == "a")
+            {
+                // If anchor contains any non inline elements, we treat the element as a block element
+                foreach (HtmlNode childNode in node.ChildNodes)
+                {
+                    if (childNode.NodeType == HtmlNodeType.Element &&
+                        _inlineElementNames.BinarySearch(childNode.Name) < 0)
+                    {
+                        return false;
+                    }
+                }
+            }
+            else if (_inlineElementNames.BinarySearch(name) < 0)
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }

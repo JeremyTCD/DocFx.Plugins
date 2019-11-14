@@ -1,44 +1,29 @@
 ﻿namespace JeremyTCD.DocFx.Plugins.SearchIndexGenerator
 {
     using Newtonsoft.Json;
+    using System;
+    using System.Collections.Generic;
 
-    public class SearchIndexItem
+    public class SearchIndexItem : IComparable<SearchIndexItem>
     {
-        [JsonProperty("relPath", Order = 1)]
-        public string RelPath { get; set; }
-
-        [JsonProperty("snippetHtml", Order = 2)]
-        public string SnippetHtml { get; set; }
-
-        [JsonProperty("title", Order = 3)]
+        [JsonProperty("title", Order = 1)]
         public string Title { get; set; }
 
+        [JsonProperty("relPath", Order = 2)]
+        public string RelPath { get; set; }
+
+        [JsonProperty("date", Order = 3)]
+        public string Date { get; set; }
+
         [JsonProperty("text", Order = 4)]
-        public string Text { get; set; }
+        public List<string> Text { get; set; }
 
-        public override bool Equals(object obj)
-        {
-            return Equals(obj as SearchIndexItem);
-        }
+        [JsonProperty("description", Order = 5)]
+        public string Description { get; set; }
 
-        public bool Equals(SearchIndexItem other)
+        public int CompareTo(SearchIndexItem other)
         {
-            if (other == null)
-            {
-                return false;
-            }
-            if (ReferenceEquals(this, other))
-            {
-                return true;
-            }
-            return string.Equals(SnippetHtml, other.SnippetHtml)
-                && string.Equals(RelPath, other.RelPath)
-                && string.Equals(Text, other.Text);
-        }
-
-        public override int GetHashCode()
-        {
-            return SnippetHtml.GetHashCode() ^ RelPath.GetHashCode() ^ Text.GetHashCode();
+            return string.CompareOrdinal(Title, other.Title);
         }
     }
 }
