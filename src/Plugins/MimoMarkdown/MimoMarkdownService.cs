@@ -1,11 +1,9 @@
 ﻿namespace JeremyTCD.DocFx.Plugins.MimoMarkdown
 {
     using Jering.Markdig.Extensions.FlexiBlocks;
-    using Jering.Markdig.Extensions.FlexiBlocks.FlexiAlertBlocks;
-    using Jering.Markdig.Extensions.FlexiBlocks.FlexiCodeBlocks;
     using Jering.Markdig.Extensions.FlexiBlocks.FlexiIncludeBlocks;
-    using Jering.Markdig.Extensions.FlexiBlocks.FlexiSectionBlocks;
-    using Jering.Markdig.Extensions.FlexiBlocks.FlexiTableBlocks;
+    using Jering.Markdig.Extensions.FlexiBlocks.FlexiPictureBlocks;
+    using Jering.Markdig.Extensions.FlexiBlocks.FlexiVideoBlocks;
     using Markdig;
     using Microsoft.DocAsCode.Common;
     using Microsoft.DocAsCode.MarkdigEngine.Extensions;
@@ -51,7 +49,7 @@
             }
 
             MarkdownPipeline markdownPipeline = CreatePipeline(path);
-            string html = null;
+            string html;
             try
             {
                 html = Markdown.ToHtml(src, markdownPipeline);
@@ -70,56 +68,33 @@
 
         private MarkdownPipeline CreatePipeline(string path)
         {
-            var flexiSectionBlocksExtensionOptions = new FlexiSectionBlocksExtensionOptions
-            {
-                DefaultBlockOptions = new FlexiSectionBlockOptions(linkIconMarkup: @"<svg><use xlink:href=""#material-design-link"" /></svg>")
-            };
+            string basePath = _parameters.BasePath;
+            string mediaDirectory = Path.Combine(basePath, "src/resources");
 
-            var flexiCodeBlocksExtensionOptions = new FlexiCodeBlocksExtensionOptions
-            {
-                DefaultBlockOptions = new FlexiCodeBlockOptions(
-                    copyIconMarkup: @"<svg><use xlink:href=""#custom-file-copy"" /></svg>",
-                    hiddenLinesIconMarkup: @"<svg><use xlink:href=""#custom-more-vert"" /></svg>")
-            };
-
-            var flexiAlertBlocksExtensionOptions = new FlexiAlertBlocksExtensionOptions();
-            flexiAlertBlocksExtensionOptions.IconMarkups["info"] = @"<svg><use xlink:href=""#material-design-info"" /></svg>";
-            flexiAlertBlocksExtensionOptions.IconMarkups["warning"] = @"<svg><use xlink:href=""#material-design-warning"" /></svg>";
-            flexiAlertBlocksExtensionOptions.IconMarkups["critical-warning"] = @"<svg><use xlink:href=""#material-design-error"" /></svg>";
-
-            var flexiIncludeBlocksExtensionOptions = new FlexiIncludeBlocksExtensionOptions
-            {
-                RootBaseUri = Path.Combine(_parameters.BasePath, path)
-            };
-
-            var flexiTableBlocksExtensionOptions = new FlexiTableBlocksExtensionOptions
-            {
-                DefaultBlockOptions = new FlexiTableBlockOptions(wrapperElement: "div")
-            };
+            var includeBlocksExtensionOptions = new FlexiIncludeBlocksExtensionOptions(baseUri: Path.Combine(basePath, path));
+            var flexiPictureBlocksExtensionOptions = new FlexiPictureBlocksExtensionOptions(localMediaDirectory: mediaDirectory);
+            var flexiVideoBlocksExtensionOptions = new FlexiVideoBlocksExtensionOptions(localMediaDirectory: mediaDirectory);
 
             var builder = new MarkdownPipelineBuilder().
-                UseEmphasisExtras().
-                UseDefinitionLists().
-                UseFootnotes().
-                UseAutoLinks().
-                UseTaskLists().
-                UseListExtras().
-                UseMediaLinks().
-                UseAbbreviations().
-                UseFooters().
-                UseFigures().
-                UseCitations().
-                UseCustomContainers().
-                UseGenericAttributes().
-                UseMathematics().
-                UseSmartyPants().
-                UseDiagrams().
-                UseFlexiBlocks(
-                    alertBlocksExtensionOptions: flexiAlertBlocksExtensionOptions,
-                    codeBlocksExtensionOptions: flexiCodeBlocksExtensionOptions,
-                    includeBlocksExtensionOptions: flexiIncludeBlocksExtensionOptions,
-                    sectionBlocksExtensionOptions: flexiSectionBlocksExtensionOptions,
-                    tableBlocksExtensionOptions: flexiTableBlocksExtensionOptions);
+                      UseEmphasisExtras().
+                      UseDefinitionLists().
+                      UseFootnotes().
+                      UseAutoLinks().
+                      UseTaskLists().
+                      UseListExtras().
+                      UseMediaLinks().
+                      UseAbbreviations().
+                      UseFooters().
+                      UseFigures().
+                      UseCitations().
+                      UseCustomContainers().
+                      UseGenericAttributes().
+                      UseMathematics().
+                      UseSmartyPants().
+                      UseDiagrams().
+                      UseFlexiBlocks(includeBlocksExtensionOptions,
+                          flexiPictureBlocksExtensionOptions: flexiPictureBlocksExtensionOptions,
+                          flexiVideoBlocksExtensionOptions: flexiVideoBlocksExtensionOptions);
 
             builder.Extensions.Add(new CustomYamlHeaderExtension(new MarkdownContext()));
 
@@ -128,7 +103,7 @@
 
         public void Dispose()
         {
-            FlexiBlocksMarkdownPipelineBuilderExtensions.DisposeServiceProvider();
+            MarkdownPipelineBuilderExtensions.DisposeServiceProvider();
         }
     }
 }
