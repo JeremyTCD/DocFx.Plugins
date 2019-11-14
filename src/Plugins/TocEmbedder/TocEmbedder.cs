@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -41,8 +42,7 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
                 string documentPath = documentAbsUri.AbsolutePath.Replace(".html", "");
 
                 // Get document Node
-                HtmlDocument htmlDoc = new HtmlDocument();
-                htmlDoc.Load(documentAbsUri.AbsolutePath, Encoding.UTF8);
+                HtmlDocument htmlDoc = manifestItem.GetHtmlOutputDoc(outputFolder);
                 HtmlNode documentNode = htmlDoc.DocumentNode;
 
                 // Navbar
@@ -73,7 +73,7 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
                 }
                 CleanHrefs(navbarAnchorNodes, documentBaseUri, navbarAbsUri);
                 HtmlNode activeNavbarNode = GetActiveNode(navbarAnchorNodes, documentPath, documentAbsUri, documentBaseUri, true);
-                activeNavbarNode?.SetAttributeValue("class", "active");
+                activeNavbarNode?.SetAttributeValue("class", "navbar__link navbar__link_active");
 
                 // Add navbar to page
                 HtmlNode navbarNode = documentNode.SelectSingleNode("//*[@class='page-header__content dropdown__body']");
@@ -117,8 +117,9 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
                     // Convert cat menu into a collapsible menu
                     // Create master buttonNode
                     HtmlNode masterButtonNode = catMenuHtmlDoc.CreateElement("button");
-                    masterButtonNode.SetAttributeValue("title", "Expand category");
-                    masterButtonNode.SetAttributeValue("aria-label", "Expand category");
+                    // TODO annoying flash on mouseover, is a title necessary for accessibility
+                    // masterButtonNode.SetAttributeValue("title", "Toggle category expanded");
+                    masterButtonNode.SetAttributeValue("aria-label", "Toggle category expanded");
                     HtmlNode masterSvgNode = catMenuHtmlDoc.CreateElement("svg");
                     masterSvgNode.SetAttributeValue("class", "collapsible-menu__expand-icon");
                     HtmlNode masterUseNode = catMenuHtmlDoc.CreateElement("use");
@@ -222,7 +223,7 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
                         HtmlNode endIndicatorElement = htmlDoc.CreateElement("div");
                         endIndicatorElement.SetAttributeValue("class", "scrollable-indicators__indicator scrollable-indicators__indicator_end");
                         HtmlNode ulElement = catMenuDocumentNode.SelectSingleNode("/ul");
-                        ulElement.SetAttributeValue("class", "scrollable-indicators__scrollable");
+                        ulElement.SetAttributeValue("class", "collapsible-menu__scrollable scrollable-indicators__scrollable");
                         scrollableNode.AppendChild(ulElement);
                         scrollableNode.AppendChild(startIndicatorElement);
                         scrollableNode.AppendChild(endIndicatorElement);
@@ -233,7 +234,7 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
                     // Get current category name
                     if (createBreadcrumbs)
                     {
-                        HtmlNode activeNavbarAnchor = navbarNode.SelectSingleNode("//*[@class='active']");
+                        HtmlNode activeNavbarAnchor = navbarNode.SelectSingleNode("//*[@class='navbar__link navbar__link_active']");
                         if (activeNavbarAnchor != null)
                         {
                             string href = activeNavbarAnchor.GetAttributeValue("href", null);
@@ -255,7 +256,7 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
                 {
                     // Add root breadcrumb
                     manifestItem.Metadata.TryGetValue("mimo_websiteName", out object websiteName);
-                    breadcrumbs.Add(("a", Convert.ToString(websiteName), "/"));
+                    breadcrumbs.Add(("a", Convert.ToString(websiteName), "/home"));
 
                     // Create breadcrumbs UL
                     HtmlNode ulElement = htmlDoc.CreateElement("ul");
@@ -309,6 +310,16 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
 
                 // Save changes
                 htmlDoc.Save(documentAbsUri.AbsolutePath);
+            }
+
+            // Delete index.html
+            string indexFile = Path.Combine(outputFolder, "index.html");
+            File.Delete(indexFile);
+
+            // Delete all toc.htmls
+            foreach(string tocFile in Directory.GetFiles(outputFolder, "toc.html", SearchOption.AllDirectories))
+            {
+                File.Delete(tocFile);
             }
 
             return manifest;

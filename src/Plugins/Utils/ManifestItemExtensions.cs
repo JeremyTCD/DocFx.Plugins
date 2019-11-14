@@ -18,17 +18,18 @@ namespace JeremyTCD.DocFx.Plugins.Utils
         {
             string relPath = manifestItem.GetHtmlOutputRelPath();
 
-            HtmlDocument htmlDoc = new HtmlDocument();
+            HtmlDocument htmlDocument = new HtmlDocument();
+
             try
             {
-                htmlDoc.Load(Path.Combine(outputFolder, relPath), Encoding.UTF8);
+                htmlDocument.Load(Path.Combine(outputFolder, relPath), Encoding.UTF8);
             }
             catch
             {
                 throw new InvalidDataException($"{nameof(ManifestItemExtensions)}: Html output {relPath} could not be loaded");
             }
 
-            return htmlDoc;
+            return htmlDocument;
         }
 
         public static HtmlNode GetHtmlOutputArticleNode(this ManifestItem manifestItem, string outputFolder)
