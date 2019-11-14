@@ -32,7 +32,7 @@ namespace JeremyTCD.DocFx.Plugins.SortedArticleList
                 return manifest;
             }
 
-            salItems.Sort((x, y) => DateTime.Compare(y.Date, x.Date));
+            salItems.Sort();
             HtmlNode salNode = GenerateSalNode(salItems);
             InsertSalNode(outputFolder, manifest, salNode);
 
@@ -41,7 +41,7 @@ namespace JeremyTCD.DocFx.Plugins.SortedArticleList
 
         private HtmlNode GenerateSalNode(List<SortedArticleListItem> salItems)
         {
-            HtmlNode salNode = HtmlNode.CreateNode($"<div></div>");
+            HtmlNode salNode = HtmlNode.CreateNode("<div></div>");
 
             foreach (SortedArticleListItem salItem in salItems)
             {
@@ -99,14 +99,11 @@ namespace JeremyTCD.DocFx.Plugins.SortedArticleList
                     continue;
                 }
 
-                manifestItem.Metadata.TryGetValue(SortedArticleListConstants.SalSnippetLengthKey, out object length);
-                int salSnippetLength = length as int? ?? SortedArticleListConstants.DefaultSalSnippetLength;
-
                 HtmlNode articleNode = manifestItem.GetHtmlOutputArticleNode(outputFolder);
                 string relPath = manifestItem.GetHtmlOutputRelPath().Replace(".html", "");
-                HtmlNode snippetNode = SnippetCreator.CreateSnippet(articleNode, relPath);//, salSnippetLength);
+                HtmlNode paginationItemNode = PaginationItemCreator.CreatePaginationItem(articleNode, relPath);
 
-                DateTime date = default(DateTime);
+                DateTime date = default;
                 try
                 {
                     date = DateTime.ParseExact(manifestItem.Metadata[SortedArticleListConstants.DateKey] as string,
@@ -120,10 +117,13 @@ namespace JeremyTCD.DocFx.Plugins.SortedArticleList
                     throw new InvalidDataException($"{nameof(SortedArticleListGenerator)}: Article {manifestItem.SourceRelativePath} has an invalid {SortedArticleListConstants.DateKey}");
                 }
 
+                manifestItem.Metadata.TryGetValue("mimo_pageTitle", out object pageTitle);
+
                 salItems.Add(new SortedArticleListItem
                 {
+                    Title = pageTitle as string,
                     RelPath = relPath,
-                    SnippetNode = snippetNode,
+                    SnippetNode = paginationItemNode,
                     Date = date
                 });
             }

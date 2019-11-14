@@ -1,43 +1,28 @@
 ﻿using HtmlAgilityPack;
-using Newtonsoft.Json;
 using System;
 
 namespace JeremyTCD.DocFx.Plugins.SortedArticleList
 {
-    public class SortedArticleListItem
+    public class SortedArticleListItem : IComparable<SortedArticleListItem>
     {
-        [JsonProperty("relPath")]
         public string RelPath { get; set; }
 
-        [JsonProperty("date")]
         public DateTime Date { get; set; }
 
-        [JsonProperty("snippetNode")]
         public HtmlNode SnippetNode { get; set; }
 
-        public override bool Equals(object obj)
-        {
-            return Equals(obj as SortedArticleListItem);
-        }
+        public string Title { get; set; }
 
-        public bool Equals(SortedArticleListItem other)
+        public int CompareTo(SortedArticleListItem other)
         {
-            if (other == null)
-            {
-                return false;
-            }
-            if (ReferenceEquals(this, other))
-            {
-                return true;
-            }
-            return Equals(SnippetNode, other.SnippetNode)
-                && string.Equals(RelPath, other.RelPath)
-                && DateTime.Equals(Date, other.Date);
-        }
+            int result = DateTime.Compare(other.Date, Date); // Most recent first
 
-        public override int GetHashCode()
-        {
-            return SnippetNode.GetHashCode() ^ RelPath.GetHashCode() ^ Date.GetHashCode();
+            if(result == 0)
+            {
+                result = string.CompareOrdinal(Title, other.Title); // Lexicographical order
+            }
+
+            return result;
         }
     }
 }
