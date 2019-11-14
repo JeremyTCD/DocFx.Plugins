@@ -66,23 +66,38 @@ namespace JeremyTCD.DocFx.Plugins.AbsolutePathResolver
                 HtmlDocument htmlDoc = manifestItem.GetHtmlOutputDoc(outputFolder);
 
                 // Update href and src attributes that aren't absolute urls or relative hash urls
-                foreach(HtmlNode htmlNode in htmlDoc.DocumentNode.SelectNodes("//*[@href != '' and not(starts-with(@href, 'http://') or starts-with(@href, 'https://') or starts-with(@href, '#'))]"))
-                {
-                    string href = htmlNode.GetAttributeValue("href", null);
-                    string newHref = href.StartsWith("/") ? prefix + href : prefix + "/" + href; // Absolute relative path does not need to start with /
-                    htmlNode.SetAttributeValue("href", newHref);
-                }
-                foreach (HtmlNode htmlNode in htmlDoc.DocumentNode.SelectNodes("//*[@src != '' and not(starts-with(@href, 'http://') or starts-with(@href, 'https://') or starts-with(@href, '#'))]"))
-                {
-                    string src = htmlNode.GetAttributeValue("src", null);
-                    string newSrc = src.StartsWith("/") ? prefix + src : prefix + "/" + src;
-                    htmlNode.SetAttributeValue("src", newSrc);
-                }
+                UpdatePaths(prefix, "href", htmlDoc);
+                UpdatePaths(prefix, "src", htmlDoc);
+                UpdatePaths(prefix, "poster", htmlDoc);
+                UpdatePaths(prefix, "data-src", htmlDoc);
+                UpdatePaths(prefix, "content", htmlDoc.DocumentNode.SelectNodes("//meta[@name='mimo-search-index']"));
 
                 File.WriteAllText(Path.Combine(outputFolder, relPath), htmlDoc.DocumentNode.OuterHtml);
             }
 
             return manifest;
+        }
+
+        private void UpdatePaths(string prefix, string attributeName, HtmlDocument htmlDocument, string element = "*")
+        {
+            HtmlNodeCollection htmlNodes = htmlDocument.DocumentNode.SelectNodes($"//{element}[@{attributeName} != '' and not(starts-with(@{attributeName}, 'http://') or starts-with(@{attributeName}, 'https://') or starts-with(@{attributeName}, '#'))]");
+
+            UpdatePaths(prefix, attributeName, htmlNodes);
+        }
+
+        private void UpdatePaths(string prefix, string attributeName, HtmlNodeCollection htmlNodes)
+        {
+            if (htmlNodes == null || htmlNodes.Count == 0)
+            {
+                return;
+            }
+
+            foreach (HtmlNode htmlNode in htmlNodes)
+            {
+                string existingPath = htmlNode.GetAttributeValue(attributeName, null);
+                string newPath = existingPath.StartsWith("/") ? prefix + existingPath : prefix + "/" + existingPath; // Absolute relative path does not need to start with /
+                htmlNode.SetAttributeValue(attributeName, newPath);
+            }
         }
     }
 }
