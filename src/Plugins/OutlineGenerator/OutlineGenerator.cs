@@ -122,6 +122,16 @@ namespace JeremyTCD.DocFx.Plugins.OutlineGenerator
                 ulElement.AppendChild(liElement);
                 ulElement.SetAttributeValue("style", $"--level: {childOutlineNode.Level}");
 
+                if (childOutlineNode.Level == 1)
+                {
+                    HtmlNode backToTopIconSvgNode = outlineHtmlDoc.CreateElement("svg");
+                    backToTopIconSvgNode.SetAttributeValue("class", "outline__back-to-top-icon");
+                    HtmlNode backToTopIconUseNode = outlineHtmlDoc.CreateElement("use");
+                    backToTopIconUseNode.SetAttributeValue("xlink:href", "#material-design-arrow-upward");
+                    backToTopIconSvgNode.AppendChild(backToTopIconUseNode);
+                    aElement.AppendChild(backToTopIconSvgNode);
+                }
+
                 if (childOutlineNode.Children.Count > 0)
                 {
                     HtmlNode childULElement = outlineHtmlDoc.CreateElement("ul");
