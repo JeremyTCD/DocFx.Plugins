@@ -37,26 +37,11 @@ namespace JeremyTCD.DocFx.Plugins.ExternalAnchorFixer
                 // Get HtmlDocument
                 HtmlDocument htmlDoc = manifestItem.GetHtmlOutputDoc(outputFolder);
 
-                // Get base url
-                string baseUrl = manifestItem.Metadata["mimo_baseUrl"] as string;
-
                 // Update all anchors that have absolute hrefs pointing at external sites to open in separate tabs.
-                // Make an exception for anchors with absolute hrefs pointing to internal URLs but with the new-tab class.
+                // Note this includes urls with the same base url that start with http. E.g https://www.jering.tech/utilities/my-utility in https://www.jering.tech/articles/my-article 
+                // will open in a new tab.
                 foreach (HtmlNode htmlNode in htmlDoc.DocumentNode.SelectNodes("//a[starts-with(@href, 'http')]"))
                 {
-                    string[] classes = htmlNode.GetAttributeValue("class", null)?.Split(' ');
-                    bool forceNewTab = classes?.Any(c => c == "new-tab") ?? false;
-
-                    if (forceNewTab)
-                    {
-                        string newClasses = string.Join(" ", classes.Where(s => s != "new-tab"));
-                        htmlNode.SetAttributeValue("class", newClasses);
-                    }
-                    else if (htmlNode.GetAttributeValue("href", null).StartsWith(baseUrl))
-                    {
-                        continue;
-                    }
-
                     htmlNode.SetAttributeValue("target", "_blank");
                     // Prevents malicious sites from manipulating the window object https://mathiasbynens.github.io/rel-noopener/#hax
                     htmlNode.SetAttributeValue("rel", "noopener");
