@@ -1,4 +1,4 @@
-﻿using HtmlAgilityPack;
+using HtmlAgilityPack;
 using System;
 
 namespace JeremyTCD.DocFx.Plugins.Utils

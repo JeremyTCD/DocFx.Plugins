@@ -1,4 +1,4 @@
-﻿namespace JeremyTCD.DocFx.Plugins.SearchIndexGenerator
+namespace JeremyTCD.DocFx.Plugins.SearchIndexGenerator
 {
     using Newtonsoft.Json;
     using System;

@@ -1,4 +1,4 @@
-﻿using HtmlAgilityPack;
+using HtmlAgilityPack;
 using Microsoft.DocAsCode.Plugins;
 using System;
 using System.IO;

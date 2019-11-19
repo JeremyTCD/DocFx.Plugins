@@ -1,4 +1,4 @@
-﻿namespace JeremyTCD.DocFx.Plugins.Utils
+namespace JeremyTCD.DocFx.Plugins.Utils
 {
     public static class UtilsConstants
     {

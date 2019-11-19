@@ -1,4 +1,4 @@
-﻿namespace JeremyTCD.DocFx.Plugins.SortedArticleList
+namespace JeremyTCD.DocFx.Plugins.SortedArticleList
 {
     public static class SortedArticleListConstants
     {

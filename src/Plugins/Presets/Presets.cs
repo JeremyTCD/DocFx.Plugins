@@ -1,4 +1,4 @@
-﻿using Microsoft.DocAsCode.Build.ConceptualDocuments;
+using Microsoft.DocAsCode.Build.ConceptualDocuments;
 using Microsoft.DocAsCode.Plugins;
 using System.Collections.Generic;
 using System.Collections.Immutable;

@@ -1,4 +1,4 @@
-﻿using HtmlAgilityPack;
+using HtmlAgilityPack;
 using JeremyTCD.DocFx.Plugins.Utils;
 using Microsoft.DocAsCode.Plugins;
 using System;

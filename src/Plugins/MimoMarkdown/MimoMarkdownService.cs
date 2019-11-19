@@ -1,4 +1,4 @@
-﻿namespace JeremyTCD.DocFx.Plugins.MimoMarkdown
+namespace JeremyTCD.DocFx.Plugins.MimoMarkdown
 {
     using Jering.Markdig.Extensions.FlexiBlocks;
     using Jering.Markdig.Extensions.FlexiBlocks.FlexiIncludeBlocks;
