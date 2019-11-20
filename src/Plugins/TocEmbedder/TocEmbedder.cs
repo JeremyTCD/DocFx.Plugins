@@ -298,7 +298,6 @@ namespace JeremyTCD.DocFx.Plugins.TocEmbedder
                         HtmlNode categoryMenuHeaderNode = documentNode.SelectSingleNode("//nav[contains(@class,'category-menu')]/header");
                         HtmlNode barSeparatedListElementClone = barSeparatedListElement.CloneNode(true);
                         categoryMenuHeaderNode.PrependChild(barSeparatedListElement);
-
                     }
 
                     if (!disableBreadcrumbs)

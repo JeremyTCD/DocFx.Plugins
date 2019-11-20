@@ -18,6 +18,7 @@ namespace JeremyTCD.DocFx.Plugins.SearchIndexGenerator
     public class SearchIndexGenerator : IPostProcessor
     {
         private static readonly Regex _regexWhiteSpace = new Regex(@"\s+", RegexOptions.Compiled);
+
         private static readonly JsonSerializerSettings _jsonSerializerSettings = new JsonSerializerSettings
         {
             NullValueHandling = NullValueHandling.Ignore
