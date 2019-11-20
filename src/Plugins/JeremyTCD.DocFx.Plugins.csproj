@@ -15,10 +15,9 @@
         <PackageReference Include="Microsoft.DocAsCode.MarkdigEngine" Version="2.39.6" />
         <PackageReference Include="Microsoft.Composition" Version="1.0.31" />
         <PackageReference Include="Microsoft.DocAsCode.YamlSerialization" Version="2.39.6" />
-        <PackageReference Include="System.Composition.AttributedModel" Version="1.0.31" />
-        <PackageReference Include="System.Collections.Immutable" Version="1.5.0" />
-        <PackageReference Include="Jering.Markdig.Extensions.FlexiBlocks" Version="0.15.0" />
-        <PackageReference Include="Roslynator.Analyzers" Version="1.9.0">
+        <PackageReference Include="System.Collections.Immutable" Version="1.6.0" />
+        <PackageReference Include="Jering.Markdig.Extensions.FlexiBlocks" Version="1.0.0-beta.0" />
+        <PackageReference Include="Roslynator.Analyzers" Version="2.2.0">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
         </PackageReference>
