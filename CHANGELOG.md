@@ -3,7 +3,15 @@ This project uses [semantic versioning](http://semver.org/spec/v2.0.0.html). Ref
 *[Semantic Versioning in Practice](https://www.jering.tech/articles/semantic-versioning-in-practice)*
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeremyTCD/DocFx.Plugins/compare/0.11.0...HEAD)
+## [Unreleased](https://github.com/JeremyTCD/DocFx.Plugins/compare/0.12.0...HEAD)
+
+## [0.12.0](https://github.com/JeremyTCD/DocFx.Plugins/compare/0.11.0...0.12.0) - Nov 21, 2019
+### Changes
+- `ExternalAnchorFixer` now now treats all absolute URLs as external links.
+- `SortedArticleListGenerator` is now deterministic.
+- `SearchIndexGenerator` now generates search index for fuse.js.
+- `AbsolutePathResolver` now updates URLs in attributes other than src and href.
+- Updated generated markdup.
 
 ## [0.11.0](https://github.com/JeremyTCD/DocFx.Plugins/compare/0.10.0...0.11.0) - Jan 22, 2019
 ### Fixes
