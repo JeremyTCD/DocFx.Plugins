@@ -11,6 +11,6 @@ resources:
 jobs:
 - template: templates/nuget/main.yml@templates
   parameters:
-    nugetReleasePushEndpoint: "https://pkgs.dev.azure.com/JeremyTCD/_packaging/Main/nuget/v2"
     runInheritDoc: false
     runTests: false
+    windowsOnly: true
